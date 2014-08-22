@@ -1,11 +1,11 @@
-# Some defined enums
-from misc import enum
+import misc
+import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.collections import attribute_mapped_collection
-DeviceTypes = enum(CROSSPOINT="Crosspoint", VIDEODEVICE="Video", CGDEVICE="CG", PROCESSOR="Processor")
+DeviceTypes = misc.enum(CROSSPOINT="Crosspoint", VIDEODEVICE="Video", CGDEVICE="CG", PROCESSOR="Processor")
 
 Base = declarative_base()
 
@@ -31,7 +31,7 @@ class PlaylistEntry(Base):
         """Return a dictionary version of the class for serialization"""
         return {
                     'eventid' : self.id,
-                    'time' : self.trigger,
+                    'time' : datetime.datetime.isoformat(datetime.datetime.fromtimestamp(self.trigger)),
                     'devicename' : self.device,
                     'devicetype' : self.devicetype,
                     'actionid' : self.action,
