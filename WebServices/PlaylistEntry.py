@@ -25,20 +25,27 @@ class PlaylistEntry(Base):
     callback = Column(Text)
     description = Column(Text)
     
-    children = relationship("PlaylistEntry", backref=backref("parent_id", remote_side=id), collection_class=attribute_mapped_collection('id'),)
+    children = relationship("PlaylistEntry", backref=backref("parent_node", remote_side=id), cascade="save-update, merge, delete")
     
     def get_dict(self):
         """Return a dictionary version of the class for serialization"""
+        
+        try:
+            readable_time = datetime.datetime.isoformat(datetime.datetime.fromtimestamp(self.trigger))
+        except TypeError:
+            readable_time = -1
+        
         return {
-                    'eventid' : self.id,
-                    'time' : datetime.datetime.isoformat(datetime.datetime.fromtimestamp(self.trigger)),
-                    'devicename' : self.device,
-                    'devicetype' : self.devicetype,
-                    'actionid' : self.action,
-                    'description' : self.description,
-                    'duration' : self.duration,
-                    'parentid' : self.parent,
+                    'eventid'      : self.id,
+                    'time'         : readable_time,
+                    'devicename'   : self.device,
+                    'devicetype'   : self.devicetype,
+                    'actionid'     : self.action,
+                    'description'  : self.description,
+                    'duration'     : self.duration,
+                    'parentid'     : self.parent,
+                    'type'         : self.type,
                     'preprocessor' : self.callback,
                     
-                    'children' : ([self.children[e].get_dict() for e in self.children]) if self.children != None else []
+                    'children'     : ([e.get_dict() for e in self.children]) if self.children != None else []
                 }
