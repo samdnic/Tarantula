@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import cherrypy
-from cherrypy.process import wspbus, plugins
+from cherrypy.process import plugins
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 

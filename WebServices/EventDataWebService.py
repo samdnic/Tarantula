@@ -1,14 +1,7 @@
-import random
-import string
-
 import cherrypy
 
-from PlaylistEvent import *
+from PlaylistEntry import PlaylistEntry
 
-events = [
-    PlaylistEntry(10, "test", DeviceTypes.VIDEODEVICE, 1, "Test123", 4, 1, "", None, None, eventid=2),
-    PlaylistEntry(10, "test", DeviceTypes.VIDEODEVICE, 1, "Test123", 4, 1, "", None, [PlaylistEntry(10, "test3"),], eventid=3)
-]
 
 EVENTDATASERVICE_CONF = {
         '/': {
@@ -26,13 +19,13 @@ class EventDataWebService(object):
         #return [e.get_dict() for e in events]
         database = cherrypy.request.db
         
-        dataarray = database.query(PlaylistEntry_SQL).filter(PlaylistEntry_SQL.id == eventid).all()
+        dataarray = database.query(PlaylistEntry).filter(PlaylistEntry.id == eventid).all()
         return [e.get_dict() for e in dataarray]
 
 
 if __name__ == '__main__':
     
-    from SQLEngine import *
+    from SQLEngine import SAEnginePlugin, SATool
     SAEnginePlugin(cherrypy.engine, 'sqlite:///test3.db').subscribe()
     cherrypy.tools.db = SATool()
     #cherrypy.tree.mount(EventDataWebService(), '/api/v1.0/events', EVENTDATASERVICE_CONF)

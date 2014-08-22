@@ -1,8 +1,6 @@
 import cherrypy
 
-from cherrypy.process import wspbus
-
-from SQLEngine import * 
+from SQLEngine import SAEnginePlugin, SATool
 
 from EventDataWebService import EventDataWebService, EVENTDATASERVICE_CONF
 
