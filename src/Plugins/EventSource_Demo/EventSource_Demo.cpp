@@ -80,7 +80,6 @@ void EventSource_Demo::tick (std::vector<EventAction> *peventqueue)
     {
         m_hook.gs->L->info("EventSource_Demo", "Generating fresh events...");
         MouseCatcherEvent mev;
-        mev.m_channel = "Default";
         mev.m_targetdevice = "Demo Event Processor 1";
         mev.m_eventtype = EVENT_FIXED;
         mev.m_triggertime = time(NULL) + 15;
@@ -104,7 +103,6 @@ void EventSource_Demo::tick (std::vector<EventAction> *peventqueue)
         action2.event.m_triggertime = m_lastupdate;
         action2.event.m_duration = m_pollperiod + 100;
         action2.thisplugin = this;
-        action2.event.m_channel = "Default";
         action2.isprocessed = false;
 
         m_lastupdate = time(NULL);

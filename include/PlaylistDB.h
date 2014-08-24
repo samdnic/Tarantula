@@ -133,7 +133,7 @@ public:
 class PlaylistDB: public SQLiteDB
 {
 public:
-    PlaylistDB (std::string channel);
+    PlaylistDB ();
     int addEvent (PlaylistEntry *pobj);
 
     std::vector<PlaylistEntry> getEvents (playlist_event_type_t type,

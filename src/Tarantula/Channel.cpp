@@ -33,80 +33,26 @@
 #include "MouseCatcherCore.h"
 
 //this is here because if it were in core header, it would create a loop.
-extern std::vector<std::shared_ptr<Channel>> g_channels;
+extern std::shared_ptr<Channel> g_channel;
 
 int end = 0;
 
 /**
- * Constructor when a name isn't explicitly specified
+ * Constructor.
  */
-Channel::Channel () : m_pl("Unknown")
+Channel::Channel () : m_pl()
 {
-    m_channame = "Unnamed Channel";
-    m_xpport = "YSTV Stream";
-    m_xpdevicename = "DemoXpointDefaultName";
-    //try and get a more sensible default XP name
-    for (std::pair<std::string, std::shared_ptr<Device>> currentdevice : g_devices)
-    {
-        if (currentdevice.second->getType() == EVENTDEVICE_CROSSPOINT)
-        {
-            m_xpdevicename = currentdevice.first;
-        }
-    }
-    init();
-}
-
-/**
- * Constructor specifying some more channel details
- *
- * @param name   The name of the channel to initialize
- * @param xpname The name of the crosspoint for this channel
- * @param xport  The name of this channel's crosspoint port (as in crosspoint device file)
- */
-Channel::Channel (std::string name, std::string xpname, std::string xport) : m_pl(name)
-{
-    m_channame = name;
-    m_xpdevicename = xpname;
-    m_xpport = xport;
-    init();
-}
-
-Channel::~Channel ()
-{
-
-}
-
-/**
- * Check that this channel's crosspoint details exist, called after device loading
- */
-void Channel::init ()
-{
-    // Confirm this crosspoint device actually exists
-    if (g_devices.find(m_xpdevicename) == g_devices.end())
-    {
-        g_logger.error("Channel " + m_channame,
-                "Crosspoint device " + m_xpdevicename + " does not exist!!");
-
-        throw (std::exception());
-    }
-
-    // And check the port is real too
-    if (std::shared_ptr<CrosspointDevice> cpd = std::static_pointer_cast<CrosspointDevice> (g_devices[m_xpdevicename]))
-    {
-        if (cpd->getVideoPortfromName(m_xpport) < 0)
-        {
-            g_logger.error("Channel " + m_channame,
-                    "Crosspoint port " + m_xpport + " does not exist!!");
-
-            throw (std::exception());
-        }
-    }
-
     // Disable manual hold
     m_hold_event = -1;
 
     // Register the preprocessor
     g_preprocessorlist.emplace("Channel::manualHoldRelease", &Channel::manualHoldRelease);
+}
+
+
+Channel::~Channel ()
+{
+
 }
 
 /**
@@ -172,33 +118,6 @@ void Channel::manualTrigger (int id)
 }
 
 /**
- * Processes child events from an event which has started
- *
- *  @param name The name of the device firing the callback
- *  @param id   The id of the event which has started playing
- */
-void Channel::begunPlaying (std::string name, int id)
-{
-    std::vector<PlaylistEntry> childevents = m_pl.getChildEvents(id);
-    // Run the child events
-    for (PlaylistEntry thisevent : childevents)
-    {
-        runEvent(thisevent);
-    }
-}
-
-/**
- * Doesn't really do anything since relative events were scrapped
- *
- *  @param name  The name of the device firing the callback
- *  @param id    The id of the event which has stopped playing
- */
-void Channel::endPlaying (std::string name, int id)
-{
-
-}
-
-/**
  * Runs a specified event.
  *
  * @param event The event to run
@@ -260,73 +179,6 @@ int Channel::createEvent (PlaylistEntry *pev)
     return ret;
 }
 
-/**
- *  Because you cannot add member function pointers to the callbacks, here is a workaround:
- *  We go through and call the tick function of each Channel class in the host's stack.
- */
-void channelTick ()
-{
-    for (std::shared_ptr<Channel> pthischannel : g_channels)
-    {
-        pthischannel->tick();
-    }
-}
-
-/**
- *  Because you cannot add member function pointers to the callbacks, here is a workaround:
- *  We go through and call the BegunPlaying function of each Channel class in the host's stack.
- *
- *  @param name string The name of the device firing the callback
- *  @param id int The id of the event which has started playing
- */
-void channelBegunPlaying (std::string name, int id)
-{
-    for (std::shared_ptr<Channel> pthischannel : g_channels)
-    {
-        pthischannel->begunPlaying(name, id);
-    }
-}
-
-/**
- *  Because you cannot add member function pointers to the callbacks, here is a workaround:
- *  We go through and call the EndPlaying function of each Channel class in the host's stack.
- *
- *  @param name string The name of the device firing the callback
- *  @param id int The id of the event which has started playing
- */
-void channelEndPlaying (std::string name, int id)
-{
-    for (std::shared_ptr<Channel> pthischannel : g_channels)
-    {
-        pthischannel->endPlaying(name, id);
-    }
-}
-
-/**
- * Loop over the channel list and return the index of a channel from its name.
- *
- * @param channelname Name of the channel to find
- *
- * @return Index of the located channel
- */
-int Channel::getChannelByName (std::string channelname)
-{
-    for (std::vector<std::shared_ptr<Channel>>::iterator it = g_channels.begin();
-            it != g_channels.end(); ++it)
-    {
-        if (*it)
-        {
-            if (!channelname.compare((*it)->m_channame))
-            {
-                return it - g_channels.begin();
-            }
-        }
-    }
-
-    // At this point no channel was found with that name
-    throw std::exception();
-    return -1;
-}
 
 /**
  * Callback function for a LiveShow EP manual trigger. Unfortunately it has to go here as the plugin can't access
@@ -351,7 +203,6 @@ void Channel::manualHoldRelease (PlaylistEntry &event, Channel *pchannel)
 
     MouseCatcherEvent xpswitch;
     xpswitch.m_action_name = "Switch";
-    xpswitch.m_channel = pchannel->m_channame;
     xpswitch.m_duration = 1;
     xpswitch.m_eventtype = EVENT_FIXED;
     xpswitch.m_targetdevice = pchannel->m_xpdevicename;

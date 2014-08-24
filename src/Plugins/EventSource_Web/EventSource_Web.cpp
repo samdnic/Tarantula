@@ -589,7 +589,6 @@ void EventSource_Web::generateScheduleSegment(MouseCatcherEvent& targetevent,
     pugi::xml_node datatable = datadiv.append_child("table");
 
     // Fill table contents for parent event
-    rowgenerate(datatable, "Channel", targetevent.m_channel);
     rowgenerate(datatable, "Description", targetevent.m_description);
     rowgenerate(datatable, "Device", targetevent.m_targetdevice);
 

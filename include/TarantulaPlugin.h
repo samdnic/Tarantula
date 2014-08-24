@@ -41,10 +41,6 @@ class Log;
 class Device;
 class Plugin;
 
-// Callbacks
-typedef std::function<void(std::string, int)> cbBegunPlaying;
-typedef std::function<void(std::string, int)> cbEndPlaying;
-typedef std::function<void(void)> cbTick;
 
 #define TPlugin
 
@@ -52,17 +48,11 @@ typedef std::function<void(void)> cbTick;
 struct GlobalStuff
 {
     std::map<std::string, std::shared_ptr<Device>> *Devices;
-    std::vector<std::shared_ptr<Channel>> *Channels;
     DebugData *dbg;
 
     Log *L; //Global Instance of a logging class.
 
     AsyncJobSystem *Async;
-
-    // Callbacks
-    std::vector<cbBegunPlaying> *BegunPlayingCallbacks;
-    std::vector<cbEndPlaying> *EndPlayingCallbacks;
-    std::vector<cbTick> *TickCallbacks;
 };
 
 struct Hook
@@ -71,10 +61,6 @@ struct Hook
     PluginConfig cfg;
 };
 
-// Function prototypes defined in CallBackTools.cpp
-void tick ();
-void begunPlaying (std::string name, int id);
-void EndPlaying (std::string name, int id);
 
 //Define plugin functions
 typedef void (*LoadPluginFunc) (Hook, PluginConfig, std::shared_ptr<Plugin>&);

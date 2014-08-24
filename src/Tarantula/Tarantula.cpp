@@ -53,7 +53,7 @@ Log g_logger;
 std::vector<cbBegunPlaying> g_begunplayingcallbacks;
 std::vector<cbEndPlaying> g_endplayingcallbacks;
 std::vector<cbTick> g_tickcallbacks;
-std::vector<std::shared_ptr<Channel>> g_channels;
+std::shared_ptr<Channel> g_channel;
 std::map<std::string, std::shared_ptr<Device>> g_devices;
 std::vector<PluginStateData> g_plugins;
 //It doesn't work if I put these elsewhere, plugins unload each other ~SN
@@ -80,21 +80,6 @@ static void unloadPlugin (PluginStateData& state, bool attemptreload = false);
 int main (int argc, char *argv[])
 {
     GlobalStuff *gs = NewGS();
-    gs->Channels = &g_channels; //copy from the global instance in Channel.cpp
-
-    //Add channel tick to callback
-    g_tickcallbacks.push_back(channelTick);
-    g_begunplayingcallbacks.push_back(channelBegunPlaying);
-    g_endplayingcallbacks.push_back(channelEndPlaying);
-
-    //Add Device ticks to callback
-    g_tickcallbacks.push_back(deviceTicks);
-
-    //Add plugin tick handler
-    g_tickcallbacks.push_back(processPluginStates);
-
-    // Add async job update handler
-    g_tickcallbacks.push_back(std::bind(&AsyncJobSystem::completeAsyncJobs, &g_async));
 
     //Static register the screen log handler if modules fail
     Hook h;
@@ -126,23 +111,15 @@ int main (int argc, char *argv[])
     g_logger.info("Tarantula Core",
             "Config loaded. System name is: " + g_pbaseconfig->getSystemName());
 
-    // Run all the channel constructors from the config file's details
-    std::vector<ChannelDetails> loadedchannels = g_pbaseconfig->getLoadedChannels();
 
-    for (ChannelDetails thischannel : loadedchannels)
+    try
     {
-        std::shared_ptr<Channel> pcl;
+        g_channel = std::make_shared<Channel>();
 
-        try
-        {
-            pcl = std::make_shared<Channel>(thischannel.m_channame, thischannel.m_xpname,
-                    thischannel.m_xpport);
-            g_channels.push_back(pcl);
-        }
-        catch (std::exception&)
-        {
-            g_logger.info("Initialisation", "Exception caught when creating channel");
-        }
+    }
+    catch (std::exception&)
+    {
+        g_logger.info("Initialisation", "Exception caught when creating channel");
     }
 
     // Initialise MouseCatcher
@@ -165,18 +142,27 @@ int main (int argc, char *argv[])
             continue;
         }
 
-        // Call all registered tick callbacks
+        // Run frame tick functions
         try
         {
-            tick();
+        	// Channel ticks
+        	g_channel->tick();
+
+        	// Devices and plugin states
+        	deviceTicks();
+        	processPluginStates();
+
+        	// Progress async job state machine
+        	g_async.completeAsyncJobs();
+
+            // Run event interface callbacks
+        	MouseCatcherCore::eventSourcePluginTicks();
+        	MouseCatcherCore::eventQueueTicks();
         }
         catch (...)
         {
             g_logger.warn("Tarantula Main" + ERROR_LOC, "Something went wrong and wasn't handled. This is bad.");
         }
-
-        // Check plugin health
-        processPluginStates();
 
         // Release mutex
         g_core_lock.unlock();

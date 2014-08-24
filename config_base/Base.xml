@@ -20,11 +20,4 @@
 	        <ReloadAfter units="frames">15000</ReloadAfter>
 	    </ReloadTimes>
 	</Plugins>
-	<Channels>
-		<Channel>
-			<Name>Default</Name>
-			<CrosspointPort>YSTV Stream</CrosspointPort>
-			<CrosspointName>Demo Crosspoint 1</CrosspointName>
-		</Channel>
-	</Channels>
 </TarantulaConfig>

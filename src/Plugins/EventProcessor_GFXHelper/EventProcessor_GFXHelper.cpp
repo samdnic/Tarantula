@@ -77,7 +77,6 @@ void EventProcessor_GFXHelper::handleEvent (MouseCatcherEvent originalEvent, Mou
     }
 
     // Set some top-level defaults
-    resultingEvent.m_channel = originalEvent.m_channel;
     resultingEvent.m_description = originalEvent.m_description;
     resultingEvent.m_eventtype = EVENT_FIXED;
     resultingEvent.m_triggertime = originalEvent.m_triggertime;
@@ -87,7 +86,6 @@ void EventProcessor_GFXHelper::handleEvent (MouseCatcherEvent originalEvent, Mou
 
     // Generate remove event
     MouseCatcherEvent removeChild;
-    removeChild.m_channel = originalEvent.m_channel;
     removeChild.m_description = originalEvent.m_description;
     removeChild.m_eventtype = EVENT_FIXED;
     removeChild.m_targetdevice = m_gfxdevice;

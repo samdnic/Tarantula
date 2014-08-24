@@ -39,10 +39,6 @@ GlobalStuff* NewGS ()
 {
     GlobalStuff* pgs = new GlobalStuff();
     pgs->L = &g_logger;
-    pgs->Channels = &g_channels;
-    pgs->BegunPlayingCallbacks = &g_begunplayingcallbacks;
-    pgs->EndPlayingCallbacks = &g_endplayingcallbacks;
-    pgs->TickCallbacks = &g_tickcallbacks;
     pgs->Devices = &g_devices;
     pgs->dbg = &g_dbg;
     pgs->Async = &g_async;

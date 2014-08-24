@@ -318,7 +318,6 @@ void EventProcessor_Fill::generateFilledEvents (std::shared_ptr<MouseCatcherEven
     // Assemble a template event to populate with filename
     MouseCatcherEvent templateevent;
     templateevent.m_action = 0;
-    templateevent.m_channel = event->m_channel;
     templateevent.m_triggertime = event->m_triggertime;
     templateevent.m_eventtype = EVENT_FIXED;
 
@@ -446,13 +445,9 @@ void EventProcessor_Fill::generateFilledEvents (std::shared_ptr<MouseCatcherEven
     if (!singleshot || 0 == event->m_childevents.size())
     {
         // Generate the continuity event for the rest
-        continuityfill.m_channel = event->m_channel;
         continuityfill.m_duration = static_cast<int>((continuitymin + duration) / framerate);
         continuityfill.m_triggertime = templateevent.m_triggertime;
 
-        continuityfill.m_childevents[0].m_extradata["nowtext"] = "Now: " + event->m_description;
-        continuityfill.m_childevents[0].m_channel = event->m_channel;
-        continuityfill.m_childevents[1].m_channel = event->m_channel;
         continuityfill.m_childevents[0].m_triggertime = templateevent.m_triggertime;
         continuityfill.m_childevents[1].m_triggertime = templateevent.m_triggertime +
                 static_cast<int>((continuitymin + duration) / framerate);
@@ -472,11 +467,10 @@ void EventProcessor_Fill::populatePlaceholderEvent (std::shared_ptr<MouseCatcher
         int placeholder_id, std::shared_ptr<void> data)
 {
     // Find the events in the playlist matching this time
-	int channelid = Channel::getChannelByName(event->m_channel);
 
     std::vector<PlaylistEntry> eventlist;
 
-    eventlist = g_channels[channelid]->m_pl.getEvents(event->m_eventtype, event->m_triggertime);
+    eventlist = g_channel->m_pl.getEvents(event->m_eventtype, event->m_triggertime);
 
     // Look for the correct data tag
     int eventid = -1;
@@ -611,7 +605,6 @@ void EventProcessor_Fill::singleShotMode (PlaylistEntry &event, Channel *pchanne
 {
     MouseCatcherEvent newevent;
     newevent.m_action = -1;
-    newevent.m_channel = pchannel->m_channame;
     newevent.m_description = event.m_description;
     newevent.m_duration = std::stoi(event.m_extras["remainingtime"]);
     newevent.m_eventtype = EVENT_FIXED;

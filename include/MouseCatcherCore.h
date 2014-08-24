@@ -69,8 +69,6 @@ namespace MouseCatcherCore
     // Convenience functions
     bool convertToPlaylistEvent (MouseCatcherEvent * const mcevent,
             int parentid, PlaylistEntry *playlistevent);
-    bool convertToMCEvent (PlaylistEntry * const playlistevent,
-            std::shared_ptr<Channel> channel, MouseCatcherEvent *generatedevent, Log *log);
-    void getEvents (int channelid, time_t starttime, int length,
-                std::vector<MouseCatcherEvent>& eventvector, std::string action);
+    bool convertToMCEvent (PlaylistEntry * const playlistevent, MouseCatcherEvent *generatedevent, Log *log);
+    void getEvents (time_t starttime, int length, std::vector<MouseCatcherEvent>& eventvector, std::string action);
 }

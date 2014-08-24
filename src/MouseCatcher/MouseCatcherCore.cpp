@@ -56,8 +56,6 @@ namespace MouseCatcherCore
         g_logger.info("MouseCatcherCore", "Now initialising MouseCatcher core");
         loadAllPlugins(sourcepath, "EventSource");
         loadAllPlugins(processorpath, "EventProcessor");
-        g_tickcallbacks.push_back(MouseCatcherCore::eventSourcePluginTicks);
-        g_tickcallbacks.push_back(MouseCatcherCore::eventQueueTicks);
     }
 
     /**
@@ -90,19 +88,6 @@ namespace MouseCatcherCore
     int processEvent (MouseCatcherEvent event, int lastid, bool ischild,
             EventAction& action)
     {
-        // Cursory check to make sure the given channel is actually real
-        int channelid;
-        try
-        {
-            channelid = Channel::getChannelByName(event.m_channel);
-        }
-        catch (std::exception&)
-        {
-            g_logger.warn("MouseCatcherCore", "Got event for bad channel: " + event.m_channel);
-            action.returnmessage = "Channel " + event.m_channel + " not found";
-            return -1;
-        }
-
         if (event.m_extradata.count("duration") > 0)
 		{
 			try
@@ -181,7 +166,7 @@ namespace MouseCatcherCore
         PlaylistEntry playlistevent;
         convertToPlaylistEvent(&event, lastid, &playlistevent);
 
-        int eventid = g_channels[channelid]->createEvent(&playlistevent);
+        int eventid = g_channel->createEvent(&playlistevent);
 
         // Loop over and handle children
         for (MouseCatcherEvent thischild : event.m_childevents)
@@ -202,68 +187,47 @@ namespace MouseCatcherCore
     /**
      * Gets all events the system knows about within a range of time
      *
-     * @param channelid     Channel to fetch events for. -1 for all channels.
      * @param starttime     Only fetch events scheduled after this timestamp.
      * @param length		Length of range to fetch events for
      * @param eventvector   Vector to insert the events into.
      * @param action        Should we grab current or next events?
      * @return              False if given channel was invalid, otherwise true.
      */
-    void getEvents (int channelid, time_t starttime, int length,
-            std::vector<MouseCatcherEvent>& eventvector, std::string action)
+    void getEvents (time_t starttime, int length, std::vector<MouseCatcherEvent>& eventvector,
+    		std::string action)
     {
         std::vector<PlaylistEntry> playlistevents;
-        std::vector<std::shared_ptr<Channel>>::iterator channelstart;
-        std::vector<std::shared_ptr<Channel>>::iterator channelend;
 
-        if (channelid != -1)
-        {
-            channelstart = g_channels.begin() + channelid;
-            channelend = channelstart + 1;
-        }
-        else
-        {
-            channelstart = g_channels.begin();
-            channelend = g_channels.end();
-        }
+		if (!action.compare("current"))
+		{
+			playlistevents = g_channel->m_pl.getExecutingEvents();
+		}
+		else if (!action.compare("next"))
+		{
+			try
+			{
+				playlistevents.push_back(g_channel->m_pl.getNextEvent());
+			}
+			catch (std::exception&)
+			{
+				// Nothing found, not an error.
+			}
+		}
+		else
+		{
+			playlistevents = g_channel->m_pl.getEventList(starttime, length);
+		}
 
-        for (std::vector<std::shared_ptr<Channel>>::iterator it = channelstart;
-                it != channelend; ++it)
-        {
-        	if (!action.compare("current"))
-        	{
-        		playlistevents = (*it)->m_pl.getExecutingEvents();
-        	}
-        	else if (!action.compare("next"))
-        	{
-        		try
-        		{
-        			playlistevents.push_back((*it)->m_pl.getNextEvent());
-        		}
-        		catch (std::exception&)
-        		{
-        			// Nothing found, not an error.
-        		}
-        	}
-        	else
-        	{
-        		playlistevents = (*it)->m_pl.getEventList(starttime, length);
-        	}
+		for (std::vector<PlaylistEntry>::iterator it2 =
+				playlistevents.begin(); it2 != playlistevents.end(); ++it2)
+		{
+			std::vector<PlaylistEntry> playlistchildren = g_channel->m_pl.getChildEvents(it2->m_eventid);
 
-            for (std::vector<PlaylistEntry>::iterator it2 =
-                    playlistevents.begin(); it2 != playlistevents.end(); ++it2)
-            {
-                std::vector<PlaylistEntry> playlistchildren = g_channels.at(
-                        it - channelstart)->m_pl.getChildEvents(it2->m_eventid);
-
-                MouseCatcherEvent tempevent;
-                MouseCatcherCore::convertToMCEvent(it2.base(), *it,
-                        &tempevent, &g_logger);
-                eventvector.push_back(tempevent);
-            }
-        }
-
-    }
+			MouseCatcherEvent tempevent;
+			MouseCatcherCore::convertToMCEvent(it2.base(), &tempevent, &g_logger);
+			eventvector.push_back(tempevent);
+		}
+	}
 
     /**
      * Remove an event from the playlist
@@ -272,19 +236,7 @@ namespace MouseCatcherCore
      */
     void removeEvent (EventAction& action)
     {
-        int channelid;
-
-        try
-        {
-            channelid = Channel::getChannelByName(action.event.m_channel);
-        } catch (std::exception&)
-        {
-            action.returnmessage = "Attempted to delete an event from a nonexistent channel";
-            g_logger.warn("Event Queue", action.returnmessage);
-            return;
-        }
-
-        g_channels.at(channelid)->m_pl.removeEvent(action.eventid);
+        g_channel->m_pl.removeEvent(action.eventid);
 
     }
 
@@ -313,19 +265,7 @@ namespace MouseCatcherCore
      */
     void shuntEvents (EventAction& action)
     {
-        int channelid;
-
-        try
-        {
-            channelid = Channel::getChannelByName(action.event.m_channel);
-        } catch (std::exception&)
-        {
-            action.returnmessage = "Attempted to shunt events from a nonexistent channel";
-            g_logger.warn("Event Queue", action.returnmessage);
-            return;
-        }
-
-        g_channels.at(channelid)->m_pl.shunt(action.event.m_triggertime, action.event.m_duration);
+        g_channel->m_pl.shunt(action.event.m_triggertime, action.event.m_duration);
     }
 
     /**
@@ -335,19 +275,7 @@ namespace MouseCatcherCore
      */
     void triggerEvent (EventAction &action)
     {
-        int channelid;
-
-        try
-        {
-            channelid = Channel::getChannelByName(action.event.m_channel);
-        } catch (std::exception&)
-        {
-            action.returnmessage = "Attempted to trigger events from a nonexistent channel";
-            g_logger.warn("Event Queue", action.returnmessage);
-            return;
-        }
-
-        g_channels.at(channelid)->manualTrigger(action.eventid);
+        g_channel->manualTrigger(action.eventid);
     }
 
 
@@ -358,22 +286,9 @@ namespace MouseCatcherCore
      */
     void regenerateEvent (EventAction &action)
     {
-        int channelid;
-
-        try
-        {
-            channelid = Channel::getChannelByName(action.event.m_channel);
-        }
-        catch (std::exception&)
-        {
-            action.returnmessage = "Attempted to regenerate events from a nonexistent channel";
-            g_logger.warn("Event Queue", action.returnmessage);
-            return;
-        }
-
         // Get this event from the playlist
         PlaylistEntry currentevent;
-        g_channels.at(channelid)->m_pl.getEventDetails(action.eventid, currentevent);
+        g_channel->m_pl.getEventDetails(action.eventid, currentevent);
 
         // Check that event was actually an EventProcessor, there's no point running this on anything else
         if (EVENTDEVICE_PROCESSOR != currentevent.m_devicetype)
@@ -384,7 +299,7 @@ namespace MouseCatcherCore
         }
 
         MouseCatcherEvent currentMCevent;
-        if (!convertToMCEvent(&currentevent, g_channels.at(channelid), &currentMCevent, &g_logger))
+        if (!convertToMCEvent(&currentevent, &currentMCevent, &g_logger))
         {
             action.returnmessage = "Unable to convert event for regeneration";
             g_logger.info("Event Queue" + ERROR_LOC, action.returnmessage);
@@ -392,7 +307,7 @@ namespace MouseCatcherCore
         }
 
         // Delete the existing playlist event
-        g_channels.at(channelid)->m_pl.removeEvent(action.eventid);
+        g_channel->m_pl.removeEvent(action.eventid);
 
         // Clean up the existing event
         currentMCevent.m_childevents.clear();
@@ -413,21 +328,8 @@ namespace MouseCatcherCore
     void updateEvents (EventAction& action)
     {
         std::vector<MouseCatcherEvent> eventdata;
-        int channelref;
-        try
-        {
-            channelref = Channel::getChannelByName(action.event.m_channel);
-        } catch (std::exception&)
-        {
-            // Log error
-            g_logger.warn("MouseCatcherCore::updateEvents",
-                    "Channel name supplied was not"
-                            " found global channel list");
-            action.returnmessage = "Invalid channel name supplied";
-            return;
-        }
 
-        getEvents(channelref, action.event.m_triggertime,
+        getEvents(action.event.m_triggertime,
         		action.event.m_duration, eventdata, action.event.m_action_name);
 
         action.thisplugin->updatePlaylist(eventdata, action.additionaldata);
@@ -647,17 +549,14 @@ namespace MouseCatcherCore
      * Converts a PlaylistEntry to a MouseCatcher event.
      *
      * @param pplaylistevent  The event to convert.
-     * @param pchannel        Pointer to this event's channel
      * @param pgeneratedevent Pointer to a MouseCatcherEvent for output
      * @param plog            Pointer to global logging instance
      * @return                True on success, false on failure
      */
-    bool convertToMCEvent (PlaylistEntry *pplaylistevent, std::shared_ptr<Channel> pchannel,
-            MouseCatcherEvent *pgeneratedevent, Log *plog)
+    bool convertToMCEvent (PlaylistEntry *pplaylistevent, MouseCatcherEvent *pgeneratedevent, Log *plog)
     {
         try
         {
-            pgeneratedevent->m_channel = pchannel->m_channame;
             pgeneratedevent->m_targetdevice = pplaylistevent->m_device;
             pgeneratedevent->m_duration = pplaylistevent->m_duration;
             pgeneratedevent->m_eventtype = pplaylistevent->m_eventtype;
@@ -699,12 +598,12 @@ namespace MouseCatcherCore
 
             // Recursively grab child events
             std::vector<PlaylistEntry> eventchildren =
-                    pchannel->m_pl.getChildEvents(pplaylistevent->m_eventid);
+                    g_channel->m_pl.getChildEvents(pplaylistevent->m_eventid);
 
             for (PlaylistEntry thischild : eventchildren)
             {
                 MouseCatcherEvent tempchild;
-                MouseCatcherCore::convertToMCEvent(&thischild, pchannel, &tempchild, plog);
+                MouseCatcherCore::convertToMCEvent(&thischild, &tempchild, plog);
 
                 pgeneratedevent->m_childevents.push_back(tempchild);
             }

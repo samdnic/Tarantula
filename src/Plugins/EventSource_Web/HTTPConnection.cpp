@@ -135,9 +135,6 @@ void HTTPConnection::requestPlaylistUpdate (std::string requesteddate, std::shar
     // Make window last for one day
     playlistupdate.event.m_duration = 60*60*24;
 
-    // Set channel from global configuration file
-    playlistupdate.event.m_channel = m_config.m_channel;
-
     // Prepare the additional data structures
     std::shared_ptr<EventActionData> ead = std::make_shared<EventActionData>();
     ead->complete = false;
@@ -313,7 +310,6 @@ void HTTPConnection::handleIncomingData (
 
 							EventAction newevent;
 							newevent.action = ACTION_ADD;
-							newevent.event.m_channel = m_config.m_channel;
 
 							if (std::string("").compare(newdata.child_value("device")))
 							{
@@ -379,7 +375,6 @@ void HTTPConnection::handleIncomingData (
 						EventAction removeaction;
 						removeaction.eventid = eventid;
 						removeaction.action = ACTION_REMOVE;
-						removeaction.event.m_channel = m_config.m_channel;
 						m_sharedata->m_localqueue.push_back(removeaction);
 
 						m_reply = http::server3::reply::stock_reply(
@@ -404,7 +399,6 @@ void HTTPConnection::handleIncomingData (
                         EventAction regenerateaction;
                         regenerateaction.eventid = eventid;
                         regenerateaction.action = ACTION_REGENERATE;
-                        regenerateaction.event.m_channel = m_config.m_channel;
                         m_sharedata->m_localqueue.push_back(regenerateaction);
 
                         m_reply = http::server3::reply::stock_reply(

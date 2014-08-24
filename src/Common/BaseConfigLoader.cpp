@@ -171,34 +171,6 @@ void BaseConfigLoader::LoadConfig (std::string filename)
             m_pluginreloadpoints.push_back(it.text().as_int(10));
         }
     }
-
-    // Grab the Channels node and load channels
-    pugi::xml_node channelsnode = m_configdata.document_element().child("Channels");
-    if (channelsnode.empty())
-    {
-        g_logger.error("Base Config Loader", "No Channels node in config file");
-        throw std::exception();
-    }
-    else
-    {
-        for (auto it : channelsnode.children())
-        {
-            ChannelDetails thischannel;
-            thischannel.m_channame = it.child_value("Name");
-            thischannel.m_xpname = it.child_value("CrosspointName");
-            thischannel.m_xpport = it.child_value("CrosspointPort");
-
-            if (thischannel.m_channame.empty() || thischannel.m_xpname.empty() ||
-                    thischannel.m_xpport.empty())
-            {
-                g_logger.error("Base Config Loader", "Invalid channel");
-                throw std::exception();
-            }
-
-            m_loadedchannels.push_back(thischannel);
-        }
-
-    }
 }
 
 float BaseConfigLoader::getFramerate ()
@@ -264,11 +236,6 @@ std::string BaseConfigLoader::getEventSourcesPath ()
 std::string BaseConfigLoader::getEventProcessorsPath ()
 {
     return m_eventprocessorspath;
-}
-
-std::vector<ChannelDetails> BaseConfigLoader::getLoadedChannels ()
-{
-    return m_loadedchannels;
 }
 
 std::string BaseConfigLoader::getDatabasePath ()

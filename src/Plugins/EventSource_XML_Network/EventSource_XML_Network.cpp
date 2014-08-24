@@ -226,7 +226,6 @@ bool EventSource_XML_Network::parseEvent (const pugi::xml_node xmlnode,
         outputevent.m_action_name = xmlnode.child_value("actionname");
     }
 
-    outputevent.m_channel = xmlnode.child_value("channel");
     outputevent.m_duration = xmlnode.child("duration").text().as_int(1);
     outputevent.m_description = xmlnode.child_value("description");
     outputevent.m_preprocessor = xmlnode.child_value("preprocessor");
@@ -369,7 +368,6 @@ bool EventSource_XML_Network::processIncoming (XML_Incoming& newdata,
 
         newaction.action = ACTION_REMOVE;
         newaction.eventid = xml.child("eventid").text().as_int(-1);
-        newaction.event.m_channel = xml.child_value("channel");
     }
     else if (!action.compare("Regenerate"))
     {
@@ -389,7 +387,6 @@ bool EventSource_XML_Network::processIncoming (XML_Incoming& newdata,
 
         newaction.action = ACTION_REGENERATE;
         newaction.eventid = xml.child("eventid").text().as_int(-1);
-        newaction.event.m_channel = xml.child_value("channel");
     }
     else if (!action.compare("Edit"))
     {
@@ -451,7 +448,6 @@ bool EventSource_XML_Network::processIncoming (XML_Incoming& newdata,
         }
 
         newaction.action = ACTION_SHUNT;
-        newaction.event.m_channel = xml.child_value("channel");
         newaction.event.m_duration = xml.child("length").text().as_int(-1);
     }
     else if (!action.compare("Trigger"))
@@ -472,7 +468,6 @@ bool EventSource_XML_Network::processIncoming (XML_Incoming& newdata,
 
         newaction.action = ACTION_TRIGGER;
         newaction.eventid = xml.child("eventid").text().as_int(-1);
-        newaction.event.m_channel = xml.child_value("channel");
     }
     else if (!action.compare("UpdatePlaylist"))
     {
@@ -498,7 +493,6 @@ bool EventSource_XML_Network::processIncoming (XML_Incoming& newdata,
         newaction.event.m_duration = xml.child("length").text().as_int(
         		time(NULL) + 86400);
 
-        newaction.event.m_channel = xml.child_value("channel");
     }
     else if (!action.compare("UpdateDevices"))
     {
@@ -655,7 +649,6 @@ void converteventtoxml (pugi::xml_node& parent,
 {
     pugi::xml_node eventdata = parent.append_child("MCEvent");
 
-    addchildwithvalue(eventdata, "channel", event.m_channel);
     addchildwithvalue(eventdata, "type",
             playlist_event_type_vector.at(event.m_eventtype));
     addchildwithvalue(eventdata, "targetdevice", event.m_targetdevice);

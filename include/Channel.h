@@ -33,12 +33,6 @@
 #include "TarantulaCore.h"
 #include "PlaylistDB.h"
 
-//define callbacks
-typedef std::function<void(std::string, int)> cbBegunPlaying;
-typedef std::function<void(std::string, int)> cbEndPlaying;
-typedef std::function<void(void)> cbTick;
-//end callbacks
-
 /**
  * Channel class.
  * All the magic of channels to broadcast
@@ -47,12 +41,9 @@ class Channel
 {
 public:
     Channel ();
-    Channel (std::string name, std::string xpname, std::string xport);
-    void init ();
     ~Channel ();
     void tick ();
-    void begunPlaying (std::string name, int id);
-    void endPlaying (std::string name, int id);
+
     int createEvent (PlaylistEntry *ev);
 
     void manualTrigger (int id);
@@ -63,8 +54,6 @@ public:
     std::string m_xpdevicename;
     //! Crosspoint port name for this channel
     std::string m_xpport;
-
-    static int getChannelByName (std::string channelname);
 
     static void manualHoldRelease (PlaylistEntry &event, Channel *pchannel);
 
@@ -78,13 +67,6 @@ private:
     int m_hold_event;
 };
 
-/*
- *  Because you cannot add member function pointers to the callbacks, here is a workaround:
- *  We go through and call the callback functions of each Channel class in the host's stack.
- */
-void channelTick ();
-void channelBegunPlaying (std::string name, int id);
-void channelEndPlaying (std::string name, int id);
 
-extern std::vector<std::shared_ptr<Channel>> g_channels; //declared here because adding it to TarantulaCore creates reference loops.
+extern std::shared_ptr<Channel> g_channel; //declared here because adding it to TarantulaCore creates reference loops.
 

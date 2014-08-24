@@ -28,17 +28,6 @@
 #include <vector>
 
 /**
- * Required fields for Channel constructor
- */
-class ChannelDetails
-{
-public:
-    std::string m_channame;
-    std::string m_xpname;
-    std::string m_xpport;
-};
-
-/**
  * Loads the main Tarantula configuration file
  * Not to be confused with parent class ConfigBase
  */
@@ -64,8 +53,6 @@ public:
 
     int getMCDeletedEventCount ();
 
-    std::vector<ChannelDetails> getLoadedChannels ();
-
 private:
     float m_framerate;
     std::string m_systemname;
@@ -75,7 +62,6 @@ private:
     std::string m_eventsourcepath;
     std::string m_eventprocessorspath;
     std::string m_database_path;
-    std::vector<ChannelDetails> m_loadedchannels;
 
     int m_mcdeletedvents;
 

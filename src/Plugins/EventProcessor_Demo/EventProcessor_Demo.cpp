@@ -67,7 +67,6 @@ void EventProcessor_Demo::handleEvent (MouseCatcherEvent originalEvent,
 
     // Create a child
     MouseCatcherEvent childevent;
-    childevent.m_channel = "Default";
     childevent.m_duration = 1;
     childevent.m_action = 0;
     childevent.m_extradata["output"] = "Default";

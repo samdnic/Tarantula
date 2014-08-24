@@ -59,8 +59,6 @@ enum EventActionTypes {
  */
 class MouseCatcherEvent {
 public:
-    //! Text name for the channel as set in base config
-    std::string m_channel;
     //! Can be a device name or an EventProcessor
     std::string m_targetdevice;
     playlist_event_type_t m_eventtype;

@@ -5,7 +5,7 @@ PLUGINNAME = $(shell pwd |sed  's/\// /g' |awk '{print $$NF}')
 
 FILES = $(shell ls -m *.cpp|sed 's/,//g')
 
-EXTRAS = ../../../build/Tarantula-CallBackTools.o ../../../build/MouseCatcher-MouseCatcherProcessorPlugin.o \
+EXTRAS = ../../../build/MouseCatcher-MouseCatcherProcessorPlugin.o \
 ../../../build/MouseCatcher-MouseCatcherCore.o ../../../build/Tarantula-PlaylistDB.o \
 ../../../build/Tarantula-Channel.o ../../../build/Tarantula-Device.o \
 ../../../build/Optional-SQLiteDB.o ../../../build/Optional-SQLite-sqlite3.o

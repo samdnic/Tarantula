@@ -5,7 +5,8 @@ PLUGINNAME = $(shell pwd |sed  's/\// /g' |awk '{print $$NF}')
 
 FILES = $(shell ls -m *.cpp)
 
-EXTRAS = ../../../build/Common-TarantulaPlugin.o ../../../build/Tarantula-Device.o ../../../build/Tarantula-CrosspointDevice.o ../../../build/Tarantula-CallBackTools.o ../../../build/Common-Misc.o
+EXTRAS = ../../../build/Common-TarantulaPlugin.o ../../../build/Tarantula-Device.o \
+../../../build/Tarantula-CrosspointDevice.o ../../../build/Common-Misc.o
 
 all: $(addprefix ../../../bin/,$(addsuffix .so,$(PLUGINNAME)))
 

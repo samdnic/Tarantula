@@ -89,7 +89,6 @@ void EventProcessor_LiveShow::handleEvent (MouseCatcherEvent originalEvent, Mous
     }
 
     // Set some top-level defaults
-    resultingEvent.m_channel = originalEvent.m_channel;
     resultingEvent.m_description = originalEvent.m_description;
     resultingEvent.m_eventtype = EVENT_FIXED;
     resultingEvent.m_triggertime = originalEvent.m_triggertime;
@@ -109,7 +108,6 @@ void EventProcessor_LiveShow::handleEvent (MouseCatcherEvent originalEvent, Mous
 
     // Template event for rest of children
     MouseCatcherEvent tempevent;
-    tempevent.m_channel = originalEvent.m_channel;
     tempevent.m_description = originalEvent.m_description;
     tempevent.m_eventtype = EVENT_FIXED;
 

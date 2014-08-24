@@ -51,71 +51,67 @@ PlaylistEntry::PlaylistEntry ()
  * Generates a database structure and prepares queries for other functions
  *
  */
-PlaylistDB::PlaylistDB (std::string channel_name) :
+PlaylistDB::PlaylistDB () :
         SQLiteDB(g_pbaseconfig->getDatabasePath())
 {
-	// Identify db table names
-	std::string evt = "\"" + channel_name + "_events\"";
-	std::string edt = "\"" + channel_name + "_extradata\"";
-
     // Do the initial database setup
-    oneTimeExec("CREATE TABLE IF NOT EXISTS " + evt + " (id INTEGER PRIMARY KEY AUTOINCREMENT, type INT, trigger INT64, "
+    oneTimeExec("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, type INT, trigger INT64, "
     		"device TEXT, devicetype INT, action, duration INT, parent INT, processed INT, lastupdate INT64, "
     		"callback TEXT, description TEXT)");
-    oneTimeExec("CREATE TABLE IF NOT EXISTS " + edt + " (eventid INT, key TEXT, value TEXT, processed INT)");
-    oneTimeExec("CREATE INDEX IF NOT EXISTS \"" + channel_name + "_trigger_index\" ON " + evt + " (trigger)");
+    oneTimeExec("CREATE TABLE IF NOT EXISTS extradata (eventid INT, key TEXT, value TEXT, processed INT)");
+    oneTimeExec("CREATE INDEX IF NOT EXISTS \"trigger_index\" ON events (trigger)");
 
     // Queries used by other functions
-    m_addevent_query = prepare("INSERT INTO " + evt + " (type, trigger, device, devicetype, action, duration, "
+    m_addevent_query = prepare("INSERT INTO events (type, trigger, device, devicetype, action, duration, "
             "parent, processed, lastupdate, callback, description) "
             "VALUES (?,?,?,?,?,?,?,0, strftime('%s', 'now'),?,?)");
 
     m_getevent_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
-            "FROM " + evt + " "
+            "FROM events "
             "WHERE type = ? AND trigger = ? AND processed = 0");
 
     m_getchildevents_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
-            "FROM " + evt + " "
+            "FROM events "
             "WHERE parent = ? AND processed = 0 "
             "ORDER BY trigger ASC");
 
-    m_getparentevent_query = prepare("SELECT ev.id FROM " + evt + " AS ev "
-            "LEFT JOIN " + evt + " as cev ON ev.id = cev.parent "
+    m_getparentevent_query = prepare("SELECT ev.id FROM events AS ev "
+            "LEFT JOIN events as cev ON ev.id = cev.parent "
             "WHERE cev.id = ? AND ev.processed >= 0");
 
     m_geteventdetails_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
-            "FROM " + evt + " "
+            "FROM events "
             "WHERE id = ? AND processed >= 0");
 
-    m_removeevent_query = prepare("UPDATE " + evt + " SET processed = -1 WHERE id = ?; "
-    		"DELETE FROM " + edt + " WHERE eventid = ?");
+    m_removeevent_query = prepare("UPDATE events SET processed = -1 WHERE id = ?; "
+    		"DELETE FROM extradata WHERE eventid = ?");
 
-    m_processevent_query = prepare("UPDATE " + evt + " SET processed = 1, lastupdate = strftime('%s', 'now') WHERE "
+    m_processevent_query = prepare("UPDATE events SET processed = 1, lastupdate = strftime('%s', 'now') WHERE "
             "id = ? AND processed >= 0; "
-            "UPDATE " + edt + " SET processed = 1 WHERE eventid = ?");
+            "UPDATE extradata SET processed = 1 WHERE eventid = ?");
 
-    m_addextras_query = prepare("INSERT INTO " + edt + " VALUES (?,?,?,0)");
+    m_addextras_query = prepare("INSERT INTO extradata VALUES (?,?,?,0)");
 
-    m_getextras_query = prepare("SELECT key,value FROM " + edt + " WHERE eventid = ?");
+    m_getextras_query = prepare("SELECT key,value FROM extradata WHERE eventid = ?");
 
-    m_gethold_query = prepare("SELECT id FROM " + evt + " WHERE trigger <= ? AND processed = 0 AND type = ? "
+    m_gethold_query = prepare("SELECT id FROM events WHERE trigger <= ? AND processed = 0 AND type = ? "
             "ORDER BY trigger DESC LIMIT 1");
 
     // Queries used by EventSource interface
     m_geteventlist_query = prepare("SELECT DISTINCT events.id, events.type, events.trigger, events.device, "
     		"events.devicetype, events.action, events.duration, events.parent, "
     		"events.callback, events.description, extradata.key, extradata.value "
-    		"FROM " + evt + " AS events LEFT JOIN " + edt + " AS extradata ON extradata.eventid = events.id "
+    		"FROM events AS events LEFT JOIN extradata AS extradata ON extradata.eventid = events.id "
     		"WHERE trigger >= ? AND trigger < ? AND parent = 0 AND events.processed >= 0 "
     		"ORDER BY trigger ASC, events.id ASC");
 
     m_getcurrent_toplevel_query = prepare ("SELECT events.id, events.type, events.trigger, events.device, "
     		"events.devicetype, events.action, events.duration, events.parent,  "
     		"events.callback, events.description "
-    		"FROM " + evt + " AS events "
+    		"FROM events AS events "
     		"WHERE parent = 0 AND processed > 0 "
             "AND (trigger + duration) < strftime('%s', 'now') "
             "ORDER BY trigger DESC, duration ASC");
@@ -123,26 +119,26 @@ PlaylistDB::PlaylistDB (std::string channel_name) :
     m_getnext_toplevel_query = prepare ("SELECT events.id, events.type, events.trigger, events.device, "
     		"events.devicetype, events.action, events.duration, events.parent,  "
     		"events.callback, events.description "
-    		"FROM " + evt + " AS events "
+    		"FROM events AS events "
     		"WHERE parent = 0 AND processed = 0 "
     		"AND trigger > strftime('%s', 'now')");
 
     // Queries used by playlist sync system
-    m_getdeletelist_query = prepare("SELECT id FROM " + evt + " WHERE processed = -1; "
-            "DELETE FROM " + evt + " WHERE processed = -1");
+    m_getdeletelist_query = prepare("SELECT id FROM events WHERE processed = -1; "
+            "DELETE FROM events WHERE processed = -1");
 
     m_getupdatelist_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, parent, "
-            "lastupdate, callback, description FROM " + evt + " WHERE lastupdate > ? AND processed >= 0");
+            "lastupdate, callback, description FROM events WHERE lastupdate > ? AND processed >= 0");
 
-    m_getextradata_query = prepare("SELECT * FROM " + edt + " AS extradata LEFT JOIN " + evt + " AS events "
+    m_getextradata_query = prepare("SELECT * FROM extradata AS extradata LEFT JOIN events AS events "
             "ON extradata.eventid = events.id WHERE events.processed >= 0 AND events.lastupdate > ?");
 
     // Queries used by Shunt command
-    m_shunt_eventcount_query = prepare("SELECT trigger, duration FROM " + evt + " "
+    m_shunt_eventcount_query = prepare("SELECT trigger, duration FROM events "
     		"WHERE parent = 0 AND processed >= 0 AND trigger >= ? AND trigger < ? "
     		"ORDER BY trigger ASC, duration DESC LIMIT 1");
 
-    m_shunt_eventupdate_query = prepare("UPDATE " + evt + " SET trigger = trigger + ?, lastupdate = strftime('%s', 'now') "
+    m_shunt_eventupdate_query = prepare("UPDATE events SET trigger = trigger + ?, lastupdate = strftime('%s', 'now') "
             "WHERE trigger >= ? AND trigger < ?");
 }
 
