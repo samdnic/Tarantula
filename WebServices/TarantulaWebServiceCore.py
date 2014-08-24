@@ -8,7 +8,7 @@ MOUNT_LOCATION = '/api/v1.0'
 
 
 if __name__ == '__main__':
-    SAEnginePlugin(cherrypy.engine, 'sqlite:///test3.db').subscribe()
+    SAEnginePlugin(cherrypy.engine, 'sqlite:///../WebServices/coredata.db').subscribe()
     cherrypy.tools.db = SATool()
     cherrypy.tree.mount(EventDataWebService(), '{0}/events'.format(MOUNT_LOCATION), EVENTDATASERVICE_CONF)
     cherrypy.engine.start()

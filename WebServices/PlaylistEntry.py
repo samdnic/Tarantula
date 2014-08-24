@@ -10,7 +10,7 @@ DeviceTypes = misc.enum(CROSSPOINT="Crosspoint", VIDEODEVICE="Video", CGDEVICE="
 Base = declarative_base()
 
 class PlaylistEntry(Base):
-    __tablename__ = 'Default_events'
+    __tablename__ = 'events'
     
     id = Column(Integer, primary_key=True, autoincrement = True)
     type = Column(Integer)

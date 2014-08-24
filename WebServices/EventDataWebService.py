@@ -156,7 +156,7 @@ class EventDataWebService(object):
 if __name__ == '__main__':
     
     from SQLEngine import SAEnginePlugin, SATool
-    SAEnginePlugin(cherrypy.engine, 'sqlite:///test3.db').subscribe()
+    SAEnginePlugin(cherrypy.engine, 'sqlite:///../datafiles/coredata.db').subscribe()
     cherrypy.tools.db = SATool()
     
     cherrypy.quickstart(EventDataWebService(), '/', EVENTDATASERVICE_CONF)
