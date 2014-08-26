@@ -4,10 +4,27 @@ import datetime
 from sqlalchemy import Column, Integer, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.collections import attribute_mapped_collection
 DeviceTypes = misc.enum(CROSSPOINT="Crosspoint", VIDEODEVICE="Video", CGDEVICE="CG", PROCESSOR="Processor")
 
 Base = declarative_base()
+
+class PluginData(Base):
+    __tablename__ = 'plugins'
+    
+    instancename = Column(Text, primary_key=True)
+    pluginname = Column(Text)
+    type = Column(Text)
+    status = Column(Text)
+    
+    def get_dict(self):
+        """Return a dictionary version for serialisation"""
+        return {
+                    'instancename' : self.instancename,
+                    'pluginname'   : self.pluginname,
+                    'type'         : self.type,
+                    'status'       : self.status
+                }
+        
 
 class PlaylistEntry(Base):
     __tablename__ = 'events'

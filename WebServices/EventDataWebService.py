@@ -2,7 +2,7 @@ import cherrypy
 import datetime
 import sqlalchemy.orm
 
-from PlaylistEntry import PlaylistEntry
+from datatypes import PlaylistEntry
 import misc
 
 EVENTDATASERVICE_CONF = {
@@ -115,7 +115,7 @@ class EventDataWebService(object):
         cherrypy.response.status = 204
         
     def _new_recurse(self, input_data, target_entry, set_id = False):
-        """Fill a new PlaylistEntry and return it or add it as a child, then recurse"""
+        """Fill a new datatypes and return it or add it as a child, then recurse"""
         # Create a new entry (with parent set if child)
         if target_entry != None:
             newentry = PlaylistEntry(parent_node = target_entry)
