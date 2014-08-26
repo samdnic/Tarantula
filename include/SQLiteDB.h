@@ -102,9 +102,8 @@ public:
     ~SQLiteDB ();
     void dump (const char* filename); // Dumps out the database to an SQLite file
     void oneTimeExec (std::string sql); // Run a query verbatim without parameters
-protected:
     std::shared_ptr<DBQuery> prepare (std::string sql);
-    void remove (std::string sql);
+protected:
     int getLastRowID ();
 
 private:

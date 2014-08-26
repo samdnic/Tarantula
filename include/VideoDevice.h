@@ -80,6 +80,7 @@ public:
 
 /**
  * Definitions of available Video Actions
+ * Don't forget if you change this to fix the webservice actionmap.py file too!
  */
 const ActionInformation VIDEOACTION_PLAY = {0, "Play", "Load and play a video file immediately",
         {

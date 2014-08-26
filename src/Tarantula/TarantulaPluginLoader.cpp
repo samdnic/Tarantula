@@ -30,6 +30,8 @@
 #include <dlfcn.h>
 #include "TarantulaPluginLoader.h"
 
+#include "SQLiteDB.h"
+
 /**
  * Initialise a new GlobalStuff struct with the relevant pointers
  *
@@ -97,5 +99,35 @@ std::shared_ptr<Plugin> ActivatePlugin (PluginConfig cfg, std::shared_ptr<Plugin
         dlclose(ppluginf);
         return NULL;
     }
+
+    // Now add the plugin load details to the core database
+    std::shared_ptr<DBQuery> delete_plugin = g_pcoredatabase->prepare("DELETE FROM plugins WHERE instancename = ?");
+    std::shared_ptr<DBQuery> add_plugin_query =
+    		g_pcoredatabase->prepare("INSERT INTO plugins (instancename, pluginname, type, status) VALUES (?,?,?,?);");
+
+
+    delete_plugin->addParam(1, DBParam(cfg.m_instance));
+    delete_plugin->bindParams();
+    sqlite3_step(delete_plugin->getStmt());
+
+    add_plugin_query->addParam(1, DBParam(cfg.m_instance));
+    add_plugin_query->addParam(2, DBParam(cfg.m_name));
+    add_plugin_query->addParam(3, DBParam(cfg.m_type));
+
+    if (cfg.m_type.compare("Logger"))
+    {
+    	add_plugin_query->addParam(4, DBParam("starting"));
+    }
+    else
+    {
+    	// Logging plugins don't fit the standard status model
+    	add_plugin_query->addParam(4, DBParam("notapplicable"));
+    }
+
+    add_plugin_query->bindParams();
+
+    sqlite3_step(add_plugin_query->getStmt());
+
+
     return pref;
 }

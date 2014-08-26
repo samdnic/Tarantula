@@ -40,6 +40,7 @@ struct CGLayer
 
 /**
  * Definitions of available CG Actions
+ * Don't forget if you change this to fix the webservice actionmap.py file too!
  */
 const ActionInformation CGACTION_ADD = { 0, "Add", "Adds a new CG event", { {
         "graphicname", "string" }, { "hostlayer", "int" }, { "templatedata",

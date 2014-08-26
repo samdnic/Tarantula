@@ -104,6 +104,11 @@ int main (int argc, char *argv[])
     // UNHAPPY NOTE: This MUST be run before any plugins try and use SQLite, or weird segfaults result
     g_pcoredatabase = std::make_shared<SQLiteDB>(g_pbaseconfig->getDatabasePath().c_str());
 
+    // Create the plugins table if needed, and clear it
+    g_pcoredatabase->oneTimeExec("CREATE TABLE IF NOT EXISTS plugins "
+    		"(instancename TEXT PRIMARY KEY, pluginname TEXT, type TEXT, status TEXT)");
+    g_pcoredatabase->oneTimeExec("DELETE FROM plugins");
+
     // Load all non-Mousecatcher plugins
     loadAllPlugins("config/" + g_pbaseconfig->getDevicesPath(), "Device");
     loadAllPlugins("config/" + g_pbaseconfig->getInterfacesPath(), "Interface");
@@ -237,6 +242,7 @@ void processPluginStates ()
                 std::string file = pluginstate.ppluginreference->getConfigFilename();
 
                 pluginstate.ppluginreference.reset();
+                pluginstate.last_status = STARTING;
 
                 // Reload the plugin
                 PluginConfigLoader plugin_config;
@@ -293,6 +299,46 @@ void processPluginStates ()
                 // Nothing to do here
                 break;
             }
+        }
+
+        // Update the database if status has changed
+        if (pluginstate.last_status != pluginstate.ppluginreference->getStatus())
+        {
+        	static std::shared_ptr<DBQuery> plugin_update_query =
+        			g_pcoredatabase->prepare("UPDATE plugins SET status = ? WHERE instancename = ?");
+
+        	plugin_update_query->rmParams();
+
+        	std::string newstatus = "unknown";
+
+        	switch (pluginstate.ppluginreference->getStatus())
+        	{
+        		case READY:
+        			newstatus = "ready";
+        			break;
+        		case UNLOAD:
+        			newstatus = "unloaded";
+        			break;
+        		case WAITING:
+        			newstatus = "waiting";
+        			break;
+        		case STARTING:
+        		case CRASHED:
+        		case FAILED:
+        			// These statuses shouldn't happen due to the state machine above.
+        			newstatus = "logicerror";
+        			break;
+        	}
+
+        	plugin_update_query->addParam(1, DBParam(newstatus));
+
+        	plugin_update_query->addParam(2, DBParam(pluginstate.ppluginreference->getPluginName()));
+
+        	plugin_update_query->bindParams();
+
+        	sqlite3_step(plugin_update_query->getStmt());
+
+        	pluginstate.last_status = pluginstate.ppluginreference->getStatus();
         }
     }
 

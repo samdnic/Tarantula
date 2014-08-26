@@ -50,6 +50,7 @@ struct CrosspointChannel
 
 /**
  *  Definitions of available Crosspoint Actions
+ *  Don't forget if you change this to fix the webservice actionmap.py file too!
  */
 
 const ActionInformation CROSSPOINTACTION_SWITCH = { 0, "Switch",

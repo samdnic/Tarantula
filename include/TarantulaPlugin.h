@@ -112,5 +112,8 @@ struct PluginStateData
     int reloadsremaining;
     int reloadtimer;
     std::string type;
+
+    // Last status known to state manager, triggers some database updates
+    plugin_status_t last_status;
 };
 

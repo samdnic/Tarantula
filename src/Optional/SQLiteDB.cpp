@@ -226,6 +226,10 @@ DBQuery::~DBQuery ()
  */
 void DBQuery::addParam (const int pos, DBParam param)
 {
+	if (pos <= 0)
+	{
+		g_logger.error("DBQuery::addParam " + ERROR_LOC, "Query parameters are not zero-indexed! Failing silently.");
+	}
     m_params.insert(std::pair<int, DBParam>(pos, param));
 }
 
