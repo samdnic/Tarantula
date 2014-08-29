@@ -21,6 +21,7 @@ class EventProcessorDemo(EventProcessorBase):
         demo_child.trigger = event.trigger
         demo_child.callback = "EventProcessor_Demo::demoPreProcessor"
         demo_child.description = "Demonstration child event from EP"
+        demo_child.type = 0
         
         data = PlaylistData(key = "filename", value = "test1")
         demo_child.eventdata.append(data)

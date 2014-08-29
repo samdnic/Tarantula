@@ -1,11 +1,114 @@
-import misc
 import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
-DeviceTypes = misc.enum(CROSSPOINT="Crosspoint", VIDEODEVICE="Video", CGDEVICE="CG", PROCESSOR="Processor")
 
+# Note that ordering needs to match that of playlist_device_type_t in PlaylistDB.h
+DEVICEACTIONMAP = [
+                        {
+                         'name' : 'Crosspoint',
+                         'items' : [
+                                 {
+                                  'id' : 0,
+                                  'name' : 'Switch',
+                                  'description' : 'Switch crosspoint output to connect to a different input',
+                                  'parameters' : {
+                                                  'output' : 'string',
+                                                  'input' : 'string'
+                                                  }
+                                  }
+                        ]},
+                        {
+                         'name' : 'Video',
+                         'items' : [
+                                 {
+                                  'id' : 0,
+                                  'name' : 'Play',
+                                  'description' : 'Load and play a video file immediately',
+                                  'parameters' : {
+                                                  'filename' : 'string'
+                                                  }
+                                  },
+                                 {
+                                  'id' : 1,
+                                  'name' : 'Load',
+                                  'description' : 'Load a video file to be played',
+                                  'parameters' : {
+                                                  'filename' : 'string'
+                                                  }
+                                  },
+                                 {
+                                  'id' : 2,
+                                  'name' : 'Play_Loaded',
+                                  'description' : 'Play a video file previously loaded with Load',
+                                  'parameters' : {}
+                                  },
+                                 {
+                                  'id' : 3,
+                                  'name' : 'Stop',
+                                  'description' : 'Stop playing',
+                                  'parameters' : {}
+                                   }             
+                        ]},
+                        {
+                         'name' : 'CG',
+                         'items' : [
+                                 {
+                                  'id' : 0,
+                                  'name' : 'Add',
+                                  'description' : 'Adds a new CG event',
+                                  'parameters' : {
+                                                  'graphicname' : 'string',
+                                                  'hostlayer' : 'int',
+                                                  'templatedata' : 'map'
+                                                  }
+                                  },   
+                                 {
+                                  'id' : 1,
+                                  'name' : 'Play',
+                                  'description' : 'Plays template on by one step',
+                                  'parameters' : {
+                                                  'hostlayer' : 'int'
+                                                  }                                          
+                                  },          
+                                 {
+                                  'id' : 2,
+                                  'name' : 'Update',
+                                  'description' : 'Replace existing template data with new data',
+                                  'parameters' : {
+                                                  'hostlayer' : 'int',
+                                                  'templatedata' : 'map'
+                                                  }
+                                  },
+                                 {
+                                  'id' : 3,
+                                  'name' : 'Remove',
+                                  'description' : 'Stop template and clear layer',
+                                  'parameters' : {
+                                                  'hostlayer' : 'int'
+                                                  }
+                                  },
+                                 {
+                                  'id' : 4,
+                                  'name' : 'Parent',
+                                  'description' : 'Does nothing - act as a placeholder for child event nesting',
+                                  'parameters' : {}
+                                  }
+                        ]},
+                        {
+                         'name' : 'Processor',
+                         'items' : [
+                                 {
+                                  'id' : 0,
+                                  'name' : 'Process',
+                                  'description' : 'Run the EventProcessor and replace it with the result',
+                                  'parameters' : {}
+                                  }
+                        ]}
+                     ]
+
+# Some SQLAlchemy ORM setup
 Base = declarative_base()
 
 class PluginData(Base):
@@ -50,7 +153,7 @@ class PlaylistEntry(Base):
         """Return a dictionary version of the class for serialization"""
         
         try:
-            readable_time = datetime.datetime.isoformat(datetime.datetime.fromtimestamp(self.trigger))
+            readable_time = datetime.datetime.isoformat(datetime.datetime.fromtimestamp(int(self.trigger)))
         except TypeError:
             readable_time = -1
             
@@ -58,13 +161,13 @@ class PlaylistEntry(Base):
         extradata_map = {}
         for item in self.eventdata:
             extradata_map[item.key] = item.value
-        
+            
         return {
                     'eventid'      : self.id,
                     'time'         : readable_time,
                     'devicename'   : self.device,
-                    'devicetype'   : self.devicetype,
-                    'actionid'     : self.action,
+                    'devicetype'   : DEVICEACTIONMAP[self.devicetype]['name'],
+                    'action'       : DEVICEACTIONMAP[self.devicetype]['items'][int(self.action)]['name'],
                     'description'  : self.description,
                     'duration'     : self.duration,
                     'parentid'     : self.parent,
