@@ -58,7 +58,7 @@ PlaylistDB::PlaylistDB () :
     oneTimeExec("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, type INT, trigger INT64, "
     		"device TEXT, devicetype INT, action, duration INT, parent INT, processed INT, lastupdate INT64, "
     		"callback TEXT, description TEXT)");
-    oneTimeExec("CREATE TABLE IF NOT EXISTS extradata (eventid INT, key TEXT, value TEXT, processed INT)");
+    oneTimeExec("CREATE TABLE IF NOT EXISTS extradata (id INTEGER PRIMARY KEY AUTOINCREMENT, eventid INT, key TEXT, value TEXT, processed INT)");
     oneTimeExec("CREATE INDEX IF NOT EXISTS \"trigger_index\" ON events (trigger)");
 
     // Queries used by other functions
@@ -93,7 +93,7 @@ PlaylistDB::PlaylistDB () :
             "id = ? AND processed >= 0; "
             "UPDATE extradata SET processed = 1 WHERE eventid = ?");
 
-    m_addextras_query = prepare("INSERT INTO extradata VALUES (?,?,?,0)");
+    m_addextras_query = prepare("INSERT INTO extradata (eventid, key, value, processed) VALUES (?,?,?,0)");
 
     m_getextras_query = prepare("SELECT key,value FROM extradata WHERE eventid = ?");
 
@@ -122,16 +122,6 @@ PlaylistDB::PlaylistDB () :
     		"FROM events AS events "
     		"WHERE parent = 0 AND processed = 0 "
     		"AND trigger > strftime('%s', 'now')");
-
-    // Queries used by playlist sync system
-    m_getdeletelist_query = prepare("SELECT id FROM events WHERE processed = -1; "
-            "DELETE FROM events WHERE processed = -1");
-
-    m_getupdatelist_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, parent, "
-            "lastupdate, callback, description FROM events WHERE lastupdate > ? AND processed >= 0");
-
-    m_getextradata_query = prepare("SELECT * FROM extradata AS extradata LEFT JOIN events AS events "
-            "ON extradata.eventid = events.id WHERE events.processed >= 0 AND events.lastupdate > ?");
 
     // Queries used by Shunt command
     m_shunt_eventcount_query = prepare("SELECT trigger, duration FROM events "
