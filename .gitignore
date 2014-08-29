@@ -5,6 +5,7 @@ config
 *.o
 *.a
 *.so
+*.pyc
 
 # Ignore databases
 *.db*
@@ -13,3 +14,7 @@ config
 .project
 .cproject
 .settings
+.pydevproject
+
+# Ignore archives
+*.tar.gz
