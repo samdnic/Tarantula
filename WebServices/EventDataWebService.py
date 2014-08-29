@@ -2,7 +2,8 @@ import cherrypy
 import datetime
 import sqlalchemy.orm
 
-from datatypes import PlaylistEntry
+import EventProcessorBase
+from datatypes import PlaylistEntry, PlaylistData
 import misc
 
 EVENTDATASERVICE_CONF = {
@@ -132,6 +133,12 @@ class EventDataWebService(object):
         newentry.callback = input_data['preprocessor']
         newentry.description = input_data['description']
         
+        for key in input_data['extradata'].keys():
+            newdata = PlaylistData()
+            newdata.key = key
+            newdata.value = input_data['extradata'][key]
+            newentry.eventdata.append(newdata)
+        
         if set_id == True:
             newentry.id = input_data['eventid']
     
@@ -148,6 +155,11 @@ class EventDataWebService(object):
         # Recurse into children
         for item in input_data['children']:
             self._new_recurse(item, newentry, set_id)
+            
+        # Call matching processors
+        if newentry.device == "EventProcessorDemo":
+            processor = EventProcessorBase.processorlist[newentry.device]
+            newentry = processor.handleevent(newentry)
         
         # Append to parent if needed
         if target_entry == None:
@@ -158,5 +170,7 @@ if __name__ == '__main__':
     from SQLEngine import SAEnginePlugin, SATool
     SAEnginePlugin(cherrypy.engine, 'sqlite:///../datafiles/coredata.db').subscribe()
     cherrypy.tools.db = SATool()
+    
+    EventProcessorBase.setup_event_processors()
     
     cherrypy.quickstart(EventDataWebService(), '/', EVENTDATASERVICE_CONF)

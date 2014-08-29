@@ -29,9 +29,9 @@ class PluginData(Base):
 class PlaylistEntry(Base):
     __tablename__ = 'events'
     
-    id = Column(Integer, primary_key=True, autoincrement = True)
+    id = Column(Integer, primary_key = True, autoincrement = True)
     type = Column(Integer)
-    trigger = Column(BigInteger, index=True)
+    trigger = Column(BigInteger, index = True)
     device = Column(Text)
     devicetype = Column(Integer)
     action = Column(Integer)
@@ -42,6 +42,8 @@ class PlaylistEntry(Base):
     callback = Column(Text)
     description = Column(Text)
     
+    eventdata = relationship("PlaylistData")
+    
     children = relationship("PlaylistEntry", backref=backref("parent_node", remote_side=id), cascade="save-update, merge, delete")
     
     def get_dict(self):
@@ -51,6 +53,11 @@ class PlaylistEntry(Base):
             readable_time = datetime.datetime.isoformat(datetime.datetime.fromtimestamp(self.trigger))
         except TypeError:
             readable_time = -1
+            
+        # Generate the data map
+        extradata_map = {}
+        for item in self.eventdata:
+            extradata_map[item.key] = item.value
         
         return {
                     'eventid'      : self.id,
@@ -63,6 +70,17 @@ class PlaylistEntry(Base):
                     'parentid'     : self.parent,
                     'type'         : self.type,
                     'preprocessor' : self.callback,
+                    'extradata'    : extradata_map,
                     
                     'children'     : ([e.get_dict() for e in self.children]) if self.children != None else []
                 }
+
+class PlaylistData(Base):
+    __tablename__ = "extradata"
+    
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    eventid = Column(Integer, ForeignKey('events.id'))
+    key = Column(Text)
+    value = Column(Text)
+    processed = Column(Integer)
+    
