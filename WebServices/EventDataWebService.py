@@ -3,7 +3,7 @@ import datetime
 import sqlalchemy.orm
 
 import EventProcessorBase
-from datatypes import PlaylistEntry, PlaylistData, DEVICEACTIONMAP
+from datatypes import PlaylistEntry, PlaylistData, DEVICEACTIONMAP, PluginData
 import misc
 
 EVENTDATASERVICE_CONF = {
@@ -133,18 +133,25 @@ class EventDataWebService(object):
         # Only place this is wrong is manual events, which an EP will fix
         newentry.type = 0
         
-        if 'devicetype' in input_data.keys() and input_data['devicetype'] != '':
-                # Find the ID number for this type
-                for i in range(0, len(DEVICEACTIONMAP)):
-                    if DEVICEACTIONMAP[i]['name'] == input_data['devicetype']:
-                        newentry.devicetype = i
-                        break
-                # Error if not found
-                if newentry.devicetype == None:
-                    raise cherrypy.HTTPError(500, "Unable to locate a device type for {0}".format(input_data['devicetype']))
-        else:
+        if 'devicetype' not in input_data.keys() or input_data['devicetype'] != '':
             # Go look it up
-            raise NotImplementedError
+            database = cherrypy.request.db
+            
+            try:
+                result = database.query(PluginData).filter(PluginData.instancename == newentry.device).one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise cherrypy.HTTPError(500, 'Failed to find device to get device type for "{0}"'.format(newentry.device))
+            
+            input_data['devicetype'] = result.type
+            
+        # Find the ID number for this type
+        for i in range(0, len(DEVICEACTIONMAP)):
+            if DEVICEACTIONMAP[i]['name'] == input_data['devicetype']:
+                newentry.devicetype = i
+                break
+        # Error if not found
+        if newentry.devicetype == None:
+            raise cherrypy.HTTPError(500, "Unable to locate a device type for {0}".format(input_data['devicetype']))
         
         for action in DEVICEACTIONMAP[newentry.devicetype]['items']:
             if action['name'] == input_data['action']:
@@ -154,7 +161,21 @@ class EventDataWebService(object):
         if newentry.action == None:
             raise cherrypy.HTTPError(500, 'Unable to locate an action for "{0}"'.format(input_data['action']))
         
-        for key in input_data['extradata'].keys():
+        # Validate the action parameters
+        for parameter in DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters']:      
+            type = DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters'][parameter]   
+               
+            if parameter not in input_data['extradata'].keys() and type != 'map':
+                raise cherrypy.HTTPError(500, 'Parameter "{0}" is required for action "{1}"'.format(parameter, input_data['action']))
+            
+            # If parameter type is int, check it can be converted (other types require no check)
+            if type == 'int':
+                try:
+                    throwaway = int(input_data['extradata'][parameter])
+                except ValueError:
+                    raise cherrypy.HTTPError(500, 'Parameter "{0}" should be an int on action "{1}"'.format(parameter, input_data['action']))
+        
+        for key in input_data['extradata'].keys():           
             newdata = PlaylistData()
             newdata.key = key
             newdata.value = input_data['extradata'][key]
