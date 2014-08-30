@@ -163,13 +163,13 @@ class EventDataWebService(object):
         
         # Validate the action parameters
         for parameter in DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters']:      
-            type = DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters'][parameter]   
+            typename = DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters'][parameter]   
                
-            if parameter not in input_data['extradata'].keys() and type != 'map':
+            if parameter not in input_data['extradata'].keys() and typename != 'map':
                 raise cherrypy.HTTPError(500, 'Parameter "{0}" is required for action "{1}"'.format(parameter, input_data['action']))
             
             # If parameter type is int, check it can be converted (other types require no check)
-            if type == 'int':
+            if typename == 'int':
                 try:
                     throwaway = int(input_data['extradata'][parameter])
                 except ValueError:
