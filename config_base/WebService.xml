@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TarantulaWebServiceConfig>
+	<Port>8080</Port>
+	<Database>datafiles/coredata.db</Database>
+	<MountStem>/</MountStem><!-- Start of mount path, followed by /api/vX.Y/... -->
+	<ProcessorConfigFiles>Processors/</ProcessorConfigFiles><!-- Location of EventProcessor configuration files -->
+</TarantulaWebServiceConfig>

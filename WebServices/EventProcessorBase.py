@@ -2,7 +2,7 @@ from importlib import import_module
 
 processorlist = {}
 
-def setup_event_processors():
+def setup_event_processors(configpath):
     """Load all the available event processors and register them"""
     # Load up and parse some XML files
     

@@ -1,4 +1,7 @@
+import os
 import cherrypy
+
+import xml.etree.ElementTree as XMLParser
 
 from SQLEngine import SAEnginePlugin, SATool
 
@@ -7,16 +10,29 @@ import EventProcessorBase
 from EventDataWebService import EventDataWebService, EVENTDATASERVICE_CONF
 from PluginDataWebService import PluginDataWebService, PLUGINDATASERVICE_CONF
 
-MOUNT_LOCATION = '/api/v1.0'
+MOUNT_LOCATION_SUFFIX = '/api/v1.0'
 
 
 if __name__ == '__main__':
+    # Load configuration data
+    tree = XMLParser.parse('config/WebService.xml')
+    configroot = tree.getroot()
     
-    EventProcessorBase.setup_event_processors()
+    mount_location = os.path.join(configroot.find('MountStem').text, MOUNT_LOCATION_SUFFIX)
     
-    SAEnginePlugin(cherrypy.engine, 'sqlite:///../datafiles/coredata.db').subscribe()
+    
+    EventProcessorBase.setup_event_processors(configroot.find('ProcessorConfigFiles').text)
+    
+    cherrypy.server.socket_port = int(configroot.find('Port').text)
+    
+    # Configure the database
+    SAEnginePlugin(cherrypy.engine, 'sqlite:///{0}'.format(configroot.find('Database').text)).subscribe()
     cherrypy.tools.db = SATool()
-    cherrypy.tree.mount(EventDataWebService(), '{0}/events'.format(MOUNT_LOCATION), EVENTDATASERVICE_CONF)
-    cherrypy.tree.mount(PluginDataWebService(), '{0}/plugins'.format(MOUNT_LOCATION), PLUGINDATASERVICE_CONF)
+    
+    # Mount all the web services and directories
+    cherrypy.tree.mount(EventDataWebService(), '{0}/events'.format(mount_location), EVENTDATASERVICE_CONF)
+    cherrypy.tree.mount(PluginDataWebService(), '{0}/plugins'.format(mount_location), PLUGINDATASERVICE_CONF)
+    
+    # Run the web host engine
     cherrypy.engine.start()
     cherrypy.engine.block()
