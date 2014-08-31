@@ -3,8 +3,8 @@
     <PluginLoad>
         <Name>Demo Event Processor</Name>
         <Type>EventProcessor</Type>
-        <Library>EventProcessor_Demo</Library>
+        <ScriptName>EventProcessorDemo</ScriptName>
         <Instance>Demo Event Processor 1</Instance>
-        <Enabled>false</Enabled>
+        <Enabled>true</Enabled>
     </PluginLoad>
 </TarantulaPlugin>

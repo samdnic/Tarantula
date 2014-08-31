@@ -3,7 +3,7 @@
     <PluginLoad>
         <Name>Fill Event Processor</Name>
         <Type>EventProcessor</Type>
-        <Library>EventProcessor_Fill</Library>
+        <ScriptName>EventProcessor_Fill</ScriptName>
         <Instance>Lazy Scheduler</Instance>
         <Description>Fill event used by EP_Lazy to actually generate the events</Description>
         <Enabled>true</Enabled>

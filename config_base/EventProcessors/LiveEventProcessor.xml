@@ -6,7 +6,7 @@
         <Description>
             Generate a video event, continuity filler and Now/Next overlays for pre-recorded material
         </Description>
-        <Library>EventProcessor_LiveShow</Library>
+        <ScriptName>EventProcessor_LiveShow</ScriptName>
         <Instance>LiveShow</Instance>
         <Enabled>true</Enabled>
     </PluginLoad>

@@ -3,11 +3,11 @@
     <PluginLoad>
         <Name>Graphics Event Helper</Name>
         <Type>EventProcessor</Type>
-        <Library>EventProcessor_GFXHelper</Library>
+        <ScriptName>EventProcessor_GFXHelper</ScriptName>
         <Instance>Graphics Helper</Instance>
-        <Enabled>true</Enabled>
+        <Enabled>false</Enabled>
     </PluginLoad>
-    <PluginData mode="simple">
+    <PluginData>
         <Device>Main Video Server Graphics</Device>
     </PluginData>
 </TarantulaPlugin>

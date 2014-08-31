@@ -3,7 +3,7 @@
     <PluginLoad>
         <Name>Fill Event Processor</Name>
         <Type>EventProcessor</Type>
-        <Library>EventProcessor_Fill</Library>
+        <ScriptName>EventProcessor_Fill</ScriptName>
         <Instance>Event Filler 1</Instance>
         <Description>Generates a series of events to fill a period or time, using a semi-random algorithm</Description>
         <Enabled>true</Enabled>
