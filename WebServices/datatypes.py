@@ -153,7 +153,8 @@ class PlaylistEntry(Base):
         """Return a dictionary version of the class for serialization"""
         
         try:
-            readable_time = datetime.datetime.isoformat(datetime.datetime.fromtimestamp(int(self.trigger)))
+            dt = datetime.datetime.utcfromtimestamp(int(self.trigger))
+            readable_time = datetime.datetime.isoformat(dt)
         except TypeError:
             readable_time = -1
             
