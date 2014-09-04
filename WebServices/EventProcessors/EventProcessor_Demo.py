@@ -2,7 +2,7 @@ from EventProcessorBase import EventProcessorBase
 from datatypes import PlaylistEntry, PlaylistData
 
 
-class EventProcessorDemo(EventProcessorBase):
+class EventProcessor_Demo(EventProcessorBase):
     def __init__(self, xmltree=None):
         """Required, but not really needed..."""
         pass
