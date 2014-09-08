@@ -4,6 +4,12 @@ from sqlalchemy import Column, Integer, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
+EVENTTYPES = [
+              'fixed',
+              'child',
+              'manual'
+              ]
+
 # Note that ordering needs to match that of playlist_device_type_t in PlaylistDB.h
 DEVICEACTIONMAP = [
                         {
@@ -108,6 +114,37 @@ DEVICEACTIONMAP = [
                         ]}
                      ]
 
+# Helper functions for action map
+def get_devicetype_fromname(name):
+    """Find the index of a device type based on its name"""
+    for i in range(0, len(DEVICEACTIONMAP)):
+        if DEVICEACTIONMAP[i]['name'].lower() == name.lower():
+            return i
+    # If we didn't find it, throw
+    raise KeyError
+
+def get_action_fromname(name, devicetype):
+    """Find the ID of an Action based on its name"""
+    # If devicetype wasn't a number, look it up
+    try:
+        dt = int(devicetype)
+    except ValueError:
+        dt = get_devicetype_fromname(devicetype)
+    
+    for action in DEVICEACTIONMAP[dt]['items']:
+        if action['name'].lower() == name.lower():
+            return action['id']
+    # If we didn't find it, throw
+    raise KeyError   
+
+def get_eventtype_fromname(name):
+    """Find the index of an eventtype based on its name"""
+    for i in range(0, len(EVENTTYPES)):
+        if EVENTTYPES[i].lower() == name.lower():
+            return i
+    # If we didn't find it, throw
+    raise KeyError     
+
 # Some SQLAlchemy ORM setup
 Base = declarative_base()
 
@@ -131,7 +168,7 @@ class PluginData(Base):
 
 class PlaylistEntry(Base):
     __tablename__ = 'events'
-    
+            
     id = Column(Integer, primary_key = True, autoincrement = True)
     type = Column(Integer)
     trigger = Column(BigInteger, index = True)
@@ -179,8 +216,26 @@ class PlaylistEntry(Base):
                     'children'     : ([e.get_dict() for e in self.children]) if self.children != None else []
                 }
 
+    def get_copy(self):
+        """Return an unlinked copy of this object"""
+        newobj = PlaylistEntry(id=self.id, type=self.type, trigger=self.trigger, device=self.device,
+                               devicetype=self.devicetype, action=self.action, processed=self.processed,
+                               lastupdate=self.lastupdate, callback=self.callback, description=self.description)
+        
+        for item in self.eventdata:
+            newobj.eventdata.append(PlaylistData(item.key, item.value))
+            
+        for child in self.children:
+            newobj.children.append(child.get_copy())
+            
+        return newobj
+
 class PlaylistData(Base):
     __tablename__ = "extradata"
+    
+    def __init__(self, key=None, value=None):
+        self.key = key
+        self.value = value
     
     id = Column(Integer, primary_key = True, autoincrement = True)
     eventid = Column(Integer, ForeignKey('events.id'))

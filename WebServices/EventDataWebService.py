@@ -4,6 +4,7 @@ import sqlalchemy.orm
 
 import EventProcessorBase
 from datatypes import PlaylistEntry, PlaylistData, DEVICEACTIONMAP, PluginData
+import datatypes
 import misc
 
 EVENTDATASERVICE_CONF = {
@@ -133,32 +134,27 @@ class EventDataWebService(object):
         # Only place this is wrong is manual events, which an EP will fix
         newentry.type = 0
         
-        if 'devicetype' not in input_data.keys() or input_data['devicetype'] != '':
+        if 'devicetype' not in input_data.keys() or input_data['devicetype'] == '':
             # Go look it up
             database = cherrypy.request.db
             
             try:
                 result = database.query(PluginData).filter(PluginData.instancename == newentry.device).one()
             except sqlalchemy.orm.exc.NoResultFound:
-                raise cherrypy.HTTPError(500, 'Failed to find device to get device type for "{0}"'.format(newentry.device))
+                raise cherrypy.HTTPError(500, 'Failed to find device to get device type for "{0}". ' 
+                'Note EventProcessors must have type Processor set explicitly'.format(newentry.device))
             
             input_data['devicetype'] = result.type
             
         # Find the ID number for this type
-        for i in range(0, len(DEVICEACTIONMAP)):
-            if DEVICEACTIONMAP[i]['name'] == input_data['devicetype']:
-                newentry.devicetype = i
-                break
-        # Error if not found
-        if newentry.devicetype == None:
+        try:
+            newentry.devicetype = datatypes.get_devicetype_fromname(input_data['devicetype'])
+        except KeyError:
             raise cherrypy.HTTPError(500, "Unable to locate a device type for {0}".format(input_data['devicetype']))
         
-        for action in DEVICEACTIONMAP[newentry.devicetype]['items']:
-            if action['name'] == input_data['action']:
-                newentry.action = action['id']
-                break
-            
-        if newentry.action == None:
+        try:
+            newentry.action = datatypes.get_action_fromname(input_data['action'], newentry.devicetype)
+        except KeyError:
             raise cherrypy.HTTPError(500, 'Unable to locate an action for "{0}"'.format(input_data['action']))
         
         # Validate the action parameters
@@ -202,9 +198,9 @@ class EventDataWebService(object):
         if input_data['devicetype'] == "Processor":
             try:
                 processor = EventProcessorBase.processorlist[newentry.device]
-                newentry = processor.handleevent(newentry)
-            except:
+            except KeyError:
                 raise cherrypy.HTTPError(500, 'No processor was found with name "{0}". Did you definitely enable it?'.format(newentry.device))
+            newentry = processor.handleevent(newentry)
         
         # Append to parent if needed
         if target_entry == None:
