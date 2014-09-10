@@ -43,6 +43,7 @@ class EventProcessor_Fill(EventProcessorBase):
         description = Column(Text)    
         typename = Column(Text)
         devicename = Column(Text)
+        weight = Column(Integer)
     
     class VideoBucket(Base):
         __tablename__ = 'buckets'
@@ -146,7 +147,7 @@ class EventProcessor_Fill(EventProcessorBase):
                                          })   
             
         # Open DB connection            
-        self.engine = create_engine('sqlite:///{0}'.format(self._dbfile), echo=True)
+        self.engine = create_engine('sqlite:///{0}'.format(self._dbfile))
         self.DBSession = sqlalchemy.orm.sessionmaker(bind=self.engine)
             
         # Create the DB tables if they don't exist   
@@ -236,7 +237,7 @@ class EventProcessor_Fill(EventProcessorBase):
         # Assemble a query to get the details
         query = select([
                         self.VideoEntry.id, 
-                        func.sum(case(self._conditionlist)).label('weights')
+                        (func.sum(case(self._conditionlist)) * self.VideoEntry.weight).label('weights')
                         ],  
                     group_by = self.VideoBucket.video_id, 
                     order_by = ('weights', func.random()),
