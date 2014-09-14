@@ -165,14 +165,13 @@ class EventProcessor_Fill(EventProcessorBase):
         parent = event
         import time
         start = time.time()
-        # Get singlemode flag, used to only generate one set of events
-        singlemode = False
-        for datapoint in event.eventdata:
-            if (datapoint.key.lower() == 'singleshotmode' 
-                and datapoint.value.lower() == 'true'):
-                singlemode = True
-                break
         
+        # Get singlemode flag, used to only generate one set of events
+        try:
+            singlemode = (event.get_data('singleshotmode').lower() == 'true')
+        except KeyError:
+            singlemode = False
+
         duration = (misc.parse_duration(event.duration, 'seconds') - 
                     self._continuitymin - self._durationoffset)
         

@@ -229,6 +229,13 @@ class PlaylistEntry(Base):
             newobj.children.append(child.get_copy())
             
         return newobj
+    
+    def get_data(self, key):
+        """Find the value of a given key in the extradata list"""
+        for datapoint in self.eventdata:
+            if datapoint.key.lower() == key:
+                return datapoint.value
+        raise KeyError("Key {0} not found in data list".format(key))
 
 class PlaylistData(Base):
     __tablename__ = "extradata"
