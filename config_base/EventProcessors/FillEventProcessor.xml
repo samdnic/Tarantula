@@ -12,35 +12,41 @@
         <DBFile>datafiles/EventProcessor_Fill/filedata.db</DBFile>
         <GenerateTopLevel>false</GenerateTopLevel><!-- Generate child events of the processor (false), or siblings (true) -->
         <FileWeight>2</FileWeight>
-        <CyclesBeforeSync>2</CyclesBeforeSync>
-        <JobPriority>5</JobPriority>
         <WeightPoints>
             <WeightPoint>
-                <Offset>500</Offset>
+                <Time units="seconds">0</Time>
                 <Weight>1000</Weight>
             </WeightPoint>
             <WeightPoint>
-                <Offset>3600</Offset>
+                <Time units="seconds">500</Time>
                 <Weight>100</Weight>
             </WeightPoint>
             <WeightPoint>
-                <Offset>40000</Offset>
+                <Time units="seconds">3600</Time>
                 <Weight>10</Weight>
+            </WeightPoint>
+            <WeightPoint>
+                <Time units="seconds">40000</Time>
+                <Weight>1</Weight>
             </WeightPoint>
         </WeightPoints>
         <StructureData>
             <StructureItem>
                 <Type>ident</Type>
                 <Device>Main Video Server</Device>
+                <DeviceType>Video</DeviceType>
+                <Action>Play</Action>
             </StructureItem>
             <StructureItem>
                 <Type>trailer</Type>
                 <Device>Main Video Server</Device>
+                <DeviceType>Video</DeviceType>
+                <Action>Play</Action>
             </StructureItem>
         </StructureData>
         <EnableFill>true</EnableFill>
         <ContinuityFill> <!--  Describes a CG event to pad out unfilled time -->
-            <MinimumTime units="frames">125</MinimumTime> <!--  Minimum length of CG event -->
+            <MinimumTime units="seconds">5</MinimumTime> <!--  Minimum length of CG event -->
             <Device>Main Video Server Graphics</Device>
             <GraphicName>continuity</GraphicName>
             <PreProcessor>EventProcessor_Fill::populateCGNowNext</PreProcessor>

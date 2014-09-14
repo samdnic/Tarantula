@@ -13,13 +13,12 @@
     <PluginData mode="simple">
         <VideoDevice>Main Video Server</VideoDevice>
         <FillProcessorName>Event Filler 1</FillProcessorName>
-        <FillLength units="frames">3750</FillLength>
-        <EnableOverlay>true</EnableOverlay>
+        <FillLength units="minutes">2</FillLength>
         <CGDevice>Main Video Server Graphics</CGDevice>
         <NowNextName>nownext</NowNextName>
-        <NowNextPeriod units="frames">15000</NowNextPeriod>
-        <NowNextMin units="frames">3000</NowNextMin>
-        <NowNextDuration units="frames">250</NowNextDuration>
+        <NowNextPeriod units="minutes">10</NowNextPeriod>
+        <NowNextMin units="minutes">2</NowNextMin>
+        <NowNextDuration units="seconds">10</NowNextDuration>
         <NowNextHostLayer>5</NowNextHostLayer>
     </PluginData>
 </TarantulaPlugin>
