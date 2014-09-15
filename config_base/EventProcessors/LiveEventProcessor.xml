@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TarantulaPlugin>
     <PluginLoad>
-        <Name>Show Event Processor</Name>
+        <Name>Live Show Event Processor</Name>
         <Type>EventProcessor</Type>
         <Description>
-            Generate a video event, continuity filler and Now/Next overlays for pre-recorded material
+            Generate stuff for live shows
         </Description>
-        <ScriptName>EventProcessor_LiveShow</ScriptName>
+        <ScriptName>EventProcessor_Live</ScriptName>
         <Instance>LiveShow</Instance>
         <Enabled>true</Enabled>
     </PluginLoad>
     <PluginData mode="simple">
-        <CrosspointDevice>Demo Crosspoint 1</CrosspointDevice>
-        <LiveInput>DaVE</LiveInput>
-        <DefaultInput>Caspar</DefaultInput>
-        <Output>YSTV Stream</Output>
+        <LiveFilename>DECKLINK DEVICE 1</LiveFilename><!-- This is supplied as a CasparCG Play command to make live happen -->
         
         <FillProcessorName>Event Filler 1</FillProcessorName>
-        <FillLength units="frames">250</FillLength>
+        <FillLength units="minutes">2</FillLength>
         
-        <EnableOverlay>true</EnableOverlay>
+        <VideoDevice>Main Video Server</VideoDevice>
+        
         <CGDevice>Main Video Server Graphics</CGDevice>
         <NowNextName>nownext</NowNextName>
-        <NowNextPeriod units="frames">15000</NowNextPeriod>
-        <NowNextMin units="frames">3000</NowNextMin>
-        <NowNextDuration units="frames">250</NowNextDuration>
+        <NowNextPeriod units="minutes">10</NowNextPeriod>
+        <NowNextMin units="minutes">2</NowNextMin>
+        <NowNextDuration units="seconds">10</NowNextDuration>
         <NowNextHostLayer>5</NowNextHostLayer>
         
         <VTDevice>Main Video Server</VTDevice>
         <VTClockFilename>AMB</VTClockFilename>
-        <VTClockDuration>30</VTClockDuration>
+        <VTClockDuration units="seconds">30</VTClockDuration>
     </PluginData>
 </TarantulaPlugin>

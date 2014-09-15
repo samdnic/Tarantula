@@ -195,16 +195,26 @@ class EventDataWebService(object):
             self._new_recurse(item, newentry, set_id)
             
         # Call matching processors
-        if input_data['devicetype'] == "Processor":
-            try:
-                processor = EventProcessorBase.processorlist[newentry.device]
-            except KeyError:
-                raise cherrypy.HTTPError(500, 'No processor was found with name "{0}". Did you definitely enable it?'.format(newentry.device))
-            newentry = processor.handleevent(newentry)
+        newentry = self._processor_recurse(newentry)
         
         # Append to parent if needed
         if target_entry == None:
             return newentry
+        
+    def _processor_recurse(self, event):
+        """Call matching processors on this event if needed, then recurse to children"""
+        if event.devicetype == datatypes.get_devicetype_fromname('Processor'):
+            try:
+                processor = EventProcessorBase.processorlist[event.device]
+            except KeyError:
+                raise cherrypy.HTTPError(500, 'No processor was found with name "{0}". Did you definitely enable it?'.format(event.device))
+            event = processor.handleevent(event)
+            
+            # Recurse through children in case new processors added
+            for child in event.children:
+                child = self._processor_recurse(child)
+                
+            return event
     
 if __name__ == '__main__':
     

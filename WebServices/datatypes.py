@@ -199,22 +199,27 @@ class PlaylistEntry(Base):
         extradata_map = {}
         for item in self.eventdata:
             extradata_map[item.key] = item.value
-            
-        return {
+                
+        data = {
                     'eventid'      : self.id,
                     'time'         : readable_time,
-                    'devicename'   : self.device,
-                    'devicetype'   : DEVICEACTIONMAP[self.devicetype]['name'],
-                    'action'       : DEVICEACTIONMAP[self.devicetype]['items'][int(self.action)]['name'],
                     'description'  : self.description,
                     'duration'     : self.duration,
                     'parentid'     : self.parent,
-                    'type'         : self.type,
+                    'type'         : EVENTTYPES[self.type],
                     'preprocessor' : self.callback,
                     'extradata'    : extradata_map,
                     
                     'children'     : ([e.get_dict() for e in self.children]) if self.children != None else []
                 }
+        
+        # Some things should only be included for normal events
+        if (EVENTTYPES[self.type] == 'fixed'):
+            data['devicename'] = self.device
+            data['devicetype'] = DEVICEACTIONMAP[self.devicetype]['name']
+            data['action'] = DEVICEACTIONMAP[self.devicetype]['items'][int(self.action)]['name']
+            
+        return data
 
     def get_copy(self):
         """Return an unlinked copy of this object"""

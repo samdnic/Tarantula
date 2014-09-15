@@ -5,10 +5,12 @@ import datatypes
 import misc
 
 
-class EventProcessor_Show(EventProcessorBase):
+class EventProcessor_Live(EventProcessorBase):
     def __init__(self, xmltree=None):
         """Read some configuration data"""
         
+        # CG Overlay fill stuff
+        self._cgdevice = xmltree.find('CGDevice').text
         self._nownextname = xmltree.find('NowNextName').text
         self._nownextlayer = int(xmltree.find('NowNextHostLayer').text)
         
@@ -19,27 +21,29 @@ class EventProcessor_Show(EventProcessorBase):
         self._nownextduration = misc.parse_duration(float(xmltree.find('NowNextDuration').text), 
                                                xmltree.find('NowNextDuration').get('units', 'seconds'))
         
+        # Trailer fill stuff
         self._continuitygenerator = xmltree.find('FillProcessorName').text
         continuitylength = xmltree.find('FillLength').text
         continuityunits = xmltree.find('FillLength').get('units', 'seconds')
         self._continuitylength = misc.parse_duration(int(continuitylength), continuityunits)
         
+        # VT Clock stuff
+        self._clockdevice = xmltree.find('VTDevice').text
+        self._clockname = xmltree.find('VTClockFilename').text
+        self._clocklength = misc.parse_duration(float(xmltree.find('VTClockDuration').text),
+                                                xmltree.find('VTClockDuration').get('units', 'seconds'))
+        
+        self._livefilename = xmltree.find('LiveFilename').text
         self._videodevice = xmltree.find('VideoDevice').text
-        self._cgdevice = xmltree.find('CGDevice').text
         
         # Nulls checking
         if (self._cgdevice == None or self._nownextname == None or self._continuitygenerator == None or
+            self._clockdevice == None or self._clockname == None or self._livefilename == None or
             self._videodevice == None):
             raise KeyError("A key piece of config data was not found! Failing!")
         
     def handleevent(self, event):
-        """Generate the string of fill, video and CG events for a show"""
-        
-        # First, validate filename was set
-        try:
-            filename = event.get_data('filename')
-        except KeyError:
-            raise ValueError('Filename must be set for show to work!')
+        """Generate the string of fill, video, VT and CG events for a live show"""
         
         # Create the container event
         newevent = PlaylistEntry()
@@ -71,12 +75,31 @@ class EventProcessor_Show(EventProcessorBase):
         videoevent.device = self._videodevice
         videoevent.devicetype = datatypes.get_devicetype_fromname('Video')
         videoevent.action = datatypes.get_action_fromname('Play', videoevent.devicetype)
-        videoevent.eventdata.append(PlaylistData('filename', filename))
+        videoevent.eventdata.append(PlaylistData('filename', self._livefilename))
         videoevent.duration = event.duration
+        
+        # VT Clock event
+        clockevent = PlaylistEntry(parent_node = newevent)
+        clockevent.type = datatypes.get_eventtype_fromname('fixed')
+        clockevent.description = event.description
+        clockevent.trigger = int(videoevent.trigger - self._clocklength.total_seconds())
+        clockevent.device = self._clockdevice
+        clockevent.devicetype = datatypes.get_devicetype_fromname('Video')
+        clockevent.action = datatypes.get_action_fromname('Play', clockevent.devicetype)
+        clockevent.eventdata.append(PlaylistData('filename', self._clockname))
+        clockevent.duration = self._clocklength.total_seconds()
+        
+        # Construct a manual hold event
+        manualevent = PlaylistEntry(parent_node = newevent)
+        manualevent.trigger = int(event.trigger + self._continuitylength.total_seconds()) + 1
+        manualevent.type = datatypes.get_eventtype_fromname('manual')
+        manualevent.description = event.description
+        manualevent.duration = event.duration
+        manualevent.callback = "Channel::manualHoldRelease"
         
         if (event.duration > self._nownextmin.total_seconds()):
             # Generate CG overlay events
-            cgparent = PlaylistEntry(parent_node = newevent)
+            cgparent = PlaylistEntry(parent_node = manualevent)
             cgparent.device = self._cgdevice
             cgparent.type = datatypes.get_eventtype_fromname('fixed')
             cgparent.devicetype = datatypes.get_devicetype_fromname('CG')
