@@ -4,11 +4,19 @@ from sqlalchemy import Column, Integer, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
+# Note that these need to match the ordering in PlaylistDB.h
 EVENTTYPES = [
               'fixed',
               'child',
               'manual'
               ]
+
+EVENTSTATES = [
+               'deleted',
+               'ready',
+               'done',
+               'hold'
+               ]
 
 # Note that ordering needs to match that of playlist_device_type_t in PlaylistDB.h
 DEVICEACTIONMAP = [
@@ -145,6 +153,14 @@ def get_eventtype_fromname(name):
     # If we didn't find it, throw
     raise KeyError     
 
+def get_eventstate_fromname(name):
+    """Find the index of an eventstatus based on its name"""
+    for i in range(0, len(EVENTSTATES)):
+        if EVENTSTATES[i].lower() == name.lower():
+            return i
+    # If we didn't find it, throw
+    raise KeyError     
+
 # Some SQLAlchemy ORM setup
 Base = declarative_base()
 
@@ -177,9 +193,9 @@ class PlaylistEntry(Base):
     action = Column(Integer)
     duration = Column(Integer)
     parent = Column(Integer, ForeignKey(id))
-    processed = Column(Integer)
+    processed = Column(Integer, default=get_eventstate_fromname('ready'))
     lastupdate = Column(BigInteger)
-    callback = Column(Text)
+    callback = Column(Text, default="")
     description = Column(Text)
     
     eventdata = relationship("PlaylistData")
@@ -206,6 +222,7 @@ class PlaylistEntry(Base):
                     'description'  : self.description,
                     'duration'     : self.duration,
                     'parentid'     : self.parent,
+                    'state'        : EVENTSTATES[self.processed],
                     'type'         : EVENTTYPES[self.type],
                     'preprocessor' : self.callback,
                     'extradata'    : extradata_map,

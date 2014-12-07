@@ -187,7 +187,7 @@ class EventDataWebService(object):
             if target_entry == None:
                 newentry.parent = 0
             
-        newentry.processed = 0
+        newentry.processed = datatypes.get_eventstate_fromname('ready')
         newentry.lastupdate = misc.get_timestamp(datetime.datetime.now())
         
         # Recurse into children

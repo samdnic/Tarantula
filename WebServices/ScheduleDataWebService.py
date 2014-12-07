@@ -1,9 +1,11 @@
 import cherrypy
 import datetime
 import sqlalchemy
+import sqlalchemy.orm
 
 import EventProcessorBase
 from datatypes import PlaylistEntry
+import datatypes
 import misc
 
 
@@ -49,7 +51,7 @@ class ScheduleDataWebService(object):
         
         dataarray = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger > start_ts,
                                                                          PlaylistEntry.trigger < end_ts,
-                                                                         PlaylistEntry.parent == 0)).all()
+                                                                         PlaylistEntry.parent == None)).all()
                                                                          
         return [self._get_public_dict(e) for e in dataarray]
     
@@ -61,13 +63,29 @@ class ScheduleDataWebService(object):
         database = cherrypy.request.db
         timepoint = misc.get_timestamp(datetime.datetime.now())
         
-        #TODO Make this handle manuals still running
+        # First, do we have a manual hold currently active?
+        try:
+            manualevent = database.query(PlaylistEntry).filter(
+                        PlaylistEntry.processed == datatypes.get_eventstate_fromname('hold')).one()
+                        
+            # OK, let's walk the tree to grab the top level
+            while manualevent.parent != None:
+                manualevent = manualevent.parent
+                
+            return self._get_public_dict(manualevent)
         
-        dataarray = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger < timepoint,
+        except sqlalchemy.orm.exc.NoResultFound:
+            pass
+
+        # Normal events then.
+        try:
+            currentevent = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger < timepoint,
                                                                          PlaylistEntry.trigger + PlaylistEntry.duration > timepoint,
-                                                                         PlaylistEntry.parent == 0)).all()
+                                                                         PlaylistEntry.parent == None)).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return []
         
-        return [self._get_public_dict(e) for e in dataarray]
+        return self._get_public_dict(currentevent)
     
     @cherrypy.tools.accept(media='text/plain')
     @cherrypy.tools.json_out()
@@ -78,7 +96,7 @@ class ScheduleDataWebService(object):
         timepoint = misc.get_timestamp(datetime.datetime.now())
         
         dataarray = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger > timepoint,
-                                                                         PlaylistEntry.parent == 0)).order_by(PlaylistEntry.trigger).all()
+                                                                         PlaylistEntry.parent == None)).order_by(PlaylistEntry.trigger).all()
                                                                          
         return [self._get_public_dict(e) for e in dataarray]
         
