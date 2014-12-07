@@ -66,15 +66,32 @@ void Channel::tick ()
     //Execute events on devices
     for (PlaylistEntry thisevent : events)
     {
-        // Only run events if the channel is not in hold, or the event is a child of the hold
-        if (0 == m_hold_event || thisevent.m_parent == m_hold_event)
-        {
-            runEvent(thisevent);
-        }
+    	// If the channel is not in hold, go ahead and run events
+    	if (0 == m_hold_event)
+    	{
+    		runEvent(thisevent);
+    	}
+    	// Channel is in hold, so walk the tree to find if this is a child of a manual
         else
         {
-            g_logger.info(m_channame + " Runner", std::string("Event ") + std::to_string(thisevent.m_eventid) +
-                    std::string(" ignored due to active hold ") + std::to_string(m_hold_event));
+        	int parentID = thisevent.m_parent;
+
+        	// Keep going until we hit the top or break out
+        	while (parentID != 0 && parentID != m_hold_event)
+        	{
+        		// In theory this traverse could be done in one go with a CTE, but its not in our version of SQLite
+        		parentID = m_pl.getParentEventID(parentID);
+        	}
+
+        	if (parentID == m_hold_event)
+        	{
+        		runEvent(thisevent);
+        	}
+        	else
+        	{
+        		g_logger.info(m_channame + " Runner", std::string("Event ") + std::to_string(thisevent.m_eventid) +
+        				std::string(" ignored due to active hold ") + std::to_string(m_hold_event));
+        	}
         }
     }
 }
