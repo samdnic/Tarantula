@@ -81,7 +81,7 @@ class EventProcessor_Fill(EventProcessorBase):
         # Parse some misc config data
         self._gentoplevel = (xmltree.find('GenerateTopLevel').text.lower() == 'true')
         self._fileweightscaling = int(xmltree.find('FileWeight').text)
-        self._dbfile = xmltree.find('DBFile').text.lower()
+        self._dbfile = xmltree.find('DBFile').text
         self._repeattofill = (xmltree.find('EnableFill').text.lower() == 'true')
         
         try:
