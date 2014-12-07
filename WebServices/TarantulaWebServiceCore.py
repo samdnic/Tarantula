@@ -9,6 +9,7 @@ import EventProcessorBase
 
 from EventDataWebService import EventDataWebService, EVENTDATASERVICE_CONF
 from PluginDataWebService import PluginDataWebService, PLUGINDATASERVICE_CONF
+from ScheduleDataWebService import ScheduleDataWebService, SCHEDULEDATASERVICE_CONF
 
 MOUNT_LOCATION_SUFFIX = '/api/v1.0'
 
@@ -32,6 +33,7 @@ if __name__ == '__main__':
     # Mount all the web services and directories
     cherrypy.tree.mount(EventDataWebService(), '{0}/events'.format(mount_location), EVENTDATASERVICE_CONF)
     cherrypy.tree.mount(PluginDataWebService(), '{0}/plugins'.format(mount_location), PLUGINDATASERVICE_CONF)
+    cherrypy.tree.mount(ScheduleDataWebService(), '{0}/schedule'.format(mount_location), SCHEDULEDATASERVICE_CONF)
     
     # Run the web host engine
     cherrypy.engine.start()
