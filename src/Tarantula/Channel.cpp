@@ -199,18 +199,4 @@ void Channel::manualHoldRelease (PlaylistEntry &event, Channel *pchannel)
     int length = time(NULL) - starttime;
     pchannel->m_pl.shunt(starttime, length);
 
-    // Add xpoint switch
-
-    MouseCatcherEvent xpswitch;
-    xpswitch.m_action_name = "Switch";
-    xpswitch.m_duration = 1;
-    xpswitch.m_eventtype = EVENT_FIXED;
-    xpswitch.m_targetdevice = pchannel->m_xpdevicename;
-    xpswitch.m_triggertime = time(NULL);
-    xpswitch.m_extradata["output"] = pchannel->m_xpport;
-    xpswitch.m_extradata["input"] = event.m_extras["switchchannel"];
-
-    EventAction action;
-    MouseCatcherCore::processEvent(xpswitch, event.m_parent, true, action);
-
 }

@@ -89,15 +89,7 @@ plugin_config_error_t PluginConfigLoader::loadConfig (std::string filename,
         return INVALID_CONFIG;
     }
 
-    // Check the device type matches the expected type
-    if (m_plugintype.compare(pluginload.child_value("Type")))
-    {
-        return INCORRECT_TYPE;
-    }
-    else
-    {
-        m_config.m_type = m_plugintype;
-    }
+    m_config.m_type = pluginload.child_value("Type");
 
     // Check if the plugin is enabled
     m_config.m_enabled = pluginload.child("Enabled").text().as_bool();

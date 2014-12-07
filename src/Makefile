@@ -1,6 +1,6 @@
 include ../Makefile.inc
 
-DIRS = sqlite-amalgamation Common Optional MouseCatcher Tarantula Plugins libCaspar libPugiXML
+DIRS = sqlite-amalgamation Common Optional Tarantula Plugins libCaspar libPugiXML
 
 .PHONY: all $(DIRS)
 
@@ -15,10 +15,7 @@ Common:
 Optional: sqlite-amalgamation
 	$(MAKE) -C $@
 	
-MouseCatcher: Common
-	$(MAKE) -C $@
-	
-Tarantula: Common libPugiXML Optional MouseCatcher
+Tarantula: Common libPugiXML Optional
 	$(MAKE) -C $@
 	
 Plugins: Common Tarantula libCaspar Optional

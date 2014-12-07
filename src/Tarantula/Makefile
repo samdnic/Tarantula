@@ -8,7 +8,7 @@ NAME = $(shell pwd |sed  's/\// /g' |awk '{print $$NF}')
 
 COMMON = $(shell ls -m ../../build/Common-*.o|sed 's/,//g')
 
-EXTRAS = ../../build/MouseCatcher-* ../../build/Optional-*
+EXTRAS = ../../build/Optional-*
 
 FILES = $(shell ls -1 *.cpp | awk '{printf "%s " ,$$0}')
 

@@ -127,10 +127,6 @@ int main (int argc, char *argv[])
         g_logger.info("Initialisation", "Exception caught when creating channel");
     }
 
-    // Initialise MouseCatcher
-    MouseCatcherCore::init("config/" + g_pbaseconfig->getEventSourcesPath(),
-            "config/" + g_pbaseconfig->getEventProcessorsPath());
-
 
     // Tick loop with length set by framerate
     while (1)
@@ -160,9 +156,6 @@ int main (int argc, char *argv[])
         	// Progress async job state machine
         	g_async.completeAsyncJobs();
 
-            // Run event interface callbacks
-        	MouseCatcherCore::eventSourcePluginTicks();
-        	MouseCatcherCore::eventQueueTicks();
         }
         catch (...)
         {
