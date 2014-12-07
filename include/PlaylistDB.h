@@ -31,10 +31,19 @@
 #include <mutex>
 #include "SQLiteDB.h" //parent class
 
-
+// Note that the indices match to the webservice bits, so change datatypes.py when changing this
 enum playlist_event_type_t
 {
     EVENT_FIXED = 0, EVENT_MANUAL = 1, EVENT_CHILD = 2
+};
+
+
+enum playlist_status_t
+{
+	EVENTSTATE_DELETE =	0,
+	EVENTSTATE_READY =	1,
+	EVENTSTATE_DONE	=	3,
+	EVENTSTATE_HOLD	=	3
 };
 
 const std::map<playlist_event_type_t, std::string> playlist_event_type_vector =
@@ -136,13 +145,13 @@ public:
     PlaylistDB ();
     int addEvent (PlaylistEntry *pobj);
 
-    std::vector<PlaylistEntry> getEvents (playlist_event_type_t type,
-            time_t trigger);
+    std::vector<PlaylistEntry> getEvents (time_t trigger);
     std::vector<PlaylistEntry> getChildEvents (int parentid);
     int getParentEventID (int eventID);
     bool getEventDetails (int eventID, PlaylistEntry &foundevent);
     std::vector<PlaylistEntry> getEventList (time_t starttime, int length);
     void processEvent (int eventID);
+    void setEventState (int eventID, playlist_status_t state);
     void removeEvent (int eventID);
     int getActiveHold (time_t bytime);
     void shunt (time_t starttime, int shuntlength);
@@ -166,7 +175,7 @@ private:
     std::shared_ptr<DBQuery> m_getparentevent_query;
     std::shared_ptr<DBQuery> m_geteventdetails_query;
     std::shared_ptr<DBQuery> m_removeevent_query;
-    std::shared_ptr<DBQuery> m_processevent_query;
+    std::shared_ptr<DBQuery> m_newstate_query;
     std::shared_ptr<DBQuery> m_addextras_query;
     std::shared_ptr<DBQuery> m_getextras_query;
     std::shared_ptr<DBQuery> m_gethold_query;

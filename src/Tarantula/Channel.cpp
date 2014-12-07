@@ -60,11 +60,8 @@ Channel::~Channel ()
  */
 void Channel::tick ()
 {
-    // Update hold flag
-    m_hold_event = m_pl.getActiveHold(time(NULL));
-
     //Pull all the time triggered events at the current time
-    std::vector<PlaylistEntry> events = m_pl.getEvents(EVENT_FIXED, (time(NULL)));
+    std::vector<PlaylistEntry> events = m_pl.getEvents(time(NULL));
 
     //Execute events on devices
     for (PlaylistEntry thisevent : events)
@@ -135,6 +132,17 @@ void Channel::runEvent (PlaylistEntry& event)
         {
             g_logger.warn("Channel Runner" + ERROR_LOC, "Ignoring invalid PreProcessor " + event.m_preprocessor);
         }
+    }
+
+    // Check if this is a manual hold and halt the playlist
+    if (EVENT_MANUAL == event.m_eventtype)
+    {
+    	m_hold_event = event.m_eventid;
+
+    	// Mark the hold event as active (helps with detection of failed holds)
+    	m_pl.setEventState(event.m_eventid, playlist_status_t::EVENTSTATE_HOLD);
+
+    	return;
     }
 
     if ((0 == g_devices.count(event.m_device)) && (event.m_devicetype != EVENTDEVICE_PROCESSOR))

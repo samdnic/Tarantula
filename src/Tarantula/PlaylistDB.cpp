@@ -69,35 +69,38 @@ PlaylistDB::PlaylistDB () :
     m_getevent_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
             "FROM events "
-            "WHERE type = ? AND trigger = ? AND processed = 0");
+            "WHERE trigger = ? AND processed = " + std::to_string(playlist_status_t::EVENTSTATE_READY));
 
     m_getchildevents_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
             "FROM events "
-            "WHERE parent = ? AND processed = 0 "
+            "WHERE parent = ? AND processed = " + std::to_string(playlist_status_t::EVENTSTATE_READY) + " "
             "ORDER BY trigger ASC");
 
     m_getparentevent_query = prepare("SELECT ev.id FROM events AS ev "
             "LEFT JOIN events as cev ON ev.id = cev.parent "
-            "WHERE cev.id = ? AND ev.processed >= 0");
+            "WHERE cev.id = ? AND ev.processed >= " + std::to_string(playlist_status_t::EVENTSTATE_READY));
 
     m_geteventdetails_query = prepare("SELECT id, type, trigger, device, devicetype, action, duration, "
             "parent, callback, description "
             "FROM events "
-            "WHERE id = ? AND processed >= 0");
+            "WHERE id = ? AND processed >= " + std::to_string(playlist_status_t::EVENTSTATE_READY));
 
-    m_removeevent_query = prepare("UPDATE events SET processed = -1 WHERE id = ?; "
+    m_removeevent_query = prepare("UPDATE events SET processed = " +
+    		std::to_string(playlist_status_t::EVENTSTATE_DELETE) + " WHERE id = ?; "
     		"DELETE FROM extradata WHERE eventid = ?");
 
-    m_processevent_query = prepare("UPDATE events SET processed = 1, lastupdate = strftime('%s', 'now') WHERE "
-            "id = ? AND processed >= 0; "
-            "UPDATE extradata SET processed = 1 WHERE eventid = ?");
+    m_newstate_query = prepare("UPDATE events SET processed = ?2, lastupdate = strftime('%s', 'now') "
+    		"WHERE id = ?1 AND processed >= 0; "
+            "UPDATE extradata SET processed = ?2 WHERE eventid = ?1");
 
-    m_addextras_query = prepare("INSERT INTO extradata (eventid, key, value, processed) VALUES (?,?,?,0)");
+    m_addextras_query = prepare("INSERT INTO extradata (eventid, key, value, processed) "
+    		"VALUES (?,?,?," + std::to_string(playlist_status_t::EVENTSTATE_READY) + ")");
 
     m_getextras_query = prepare("SELECT key,value FROM extradata WHERE eventid = ?");
 
-    m_gethold_query = prepare("SELECT id FROM events WHERE trigger <= ? AND processed = 0 AND type = ? "
+    m_gethold_query = prepare("SELECT id FROM events WHERE processed = " +
+    		std::to_string(playlist_status_t::EVENTSTATE_HOLD) + " AND type = ? "
             "ORDER BY trigger DESC LIMIT 1");
 
     // Queries used by EventSource interface
@@ -183,8 +186,7 @@ int PlaylistDB::addEvent (PlaylistEntry *pobj)
 void PlaylistDB::populateEvent (sqlite3_stmt *pstmt, PlaylistEntry *pple)
 {
     pple->m_eventid = sqlite3_column_int(pstmt, 0);
-    pple->m_eventtype = static_cast<playlist_event_type_t>(sqlite3_column_int(
-            pstmt, 1));
+    pple->m_eventtype = static_cast<playlist_event_type_t>(sqlite3_column_int(pstmt, 1));
     pple->m_trigger = sqlite3_column_int(pstmt, 2);
     pple->m_device =
             std::string(reinterpret_cast<const char*>(sqlite3_column_text (pstmt, 3)));
@@ -220,19 +222,17 @@ void PlaylistDB::getExtraData (PlaylistEntry *pple)
 }
 
 /**
- * Gets an event of the specified type and trigger from the database
+ * Gets an event of the specified trigger
+        elsefrom the database
  *
- * @param type    The event type, using one of the EVENT_ values
  * @param trigger The event trigger, either a Unix timestamp or the previous event's ID
  * @return        The event found at this time
  */
-std::vector<PlaylistEntry> PlaylistDB::getEvents (playlist_event_type_t type,
-        time_t trigger)
+std::vector<PlaylistEntry> PlaylistDB::getEvents (time_t trigger)
 {
     std::vector<PlaylistEntry> eventlist;
     m_getevent_query->rmParams();
-    m_getevent_query->addParam(1, DBParam(type));
-    m_getevent_query->addParam(2, DBParam(trigger));
+    m_getevent_query->addParam(1, DBParam(trigger));
     m_getevent_query->bindParams();
 
     sqlite3_stmt *stmt = m_getevent_query->getStmt();
@@ -384,11 +384,22 @@ bool PlaylistDB::getEventDetails (int eventID, PlaylistEntry &foundevent)
  */
 void PlaylistDB::processEvent (int eventID)
 {
-    m_processevent_query->rmParams();
-    m_processevent_query->addParam(1, eventID);
-    m_processevent_query->addParam(2, eventID);
-    m_processevent_query->bindParams();
-    sqlite3_step(m_processevent_query->getStmt());
+	setEventState(eventID, playlist_status_t::EVENTSTATE_DONE);
+}
+
+/**
+ * Change event processed status
+ *
+ * @param eventID  The ID of the event to update
+ * @param newstate A state to set
+ */
+void PlaylistDB::setEventState (int eventID, playlist_status_t newstate)
+{
+    m_newstate_query->rmParams();
+    m_newstate_query->addParam(1, eventID);
+    m_newstate_query->addParam(2, newstate);
+    m_newstate_query->bindParams();
+    sqlite3_step(m_newstate_query->getStmt());
 }
 
 /**
