@@ -44,9 +44,6 @@ Channel::Channel () : m_pl()
 {
     // Disable manual hold
     m_hold_event = -1;
-
-    // Register the preprocessor
-    g_preprocessorlist.emplace("Channel::manualHoldRelease", &Channel::manualHoldRelease);
 }
 
 
@@ -96,41 +93,6 @@ void Channel::tick ()
         				std::string(" ignored due to active hold ") + std::to_string(m_hold_event));
         	}
         }
-    }
-}
-
-/**
- * Trigger a manual event and release hold on channel
- *
- * @param id Event ID to trigger
- */
-void Channel::manualTrigger (int id)
-{
-    if (id == m_hold_event)
-    {
-        m_hold_event = 0;
-
-        PlaylistEntry event;
-        m_pl.getEventDetails(id, event);
-
-        // Run the callback function
-        if (!event.m_preprocessor.empty())
-        {
-            if (g_preprocessorlist.count(event.m_preprocessor) > 0)
-            {
-                g_preprocessorlist[event.m_preprocessor](event, this);
-            }
-            else
-            {
-                g_logger.warn("Channel Runner" + ERROR_LOC, "Ignoring invalid PreProcessor " + event.m_preprocessor);
-            }
-        }
-
-        m_pl.processEvent(id);
-    }
-    else
-    {
-        g_logger.warn(m_channame + ERROR_LOC, "Got a manual trigger for an inactive hold, ignoring");
     }
 }
 
@@ -205,26 +167,4 @@ int Channel::createEvent (PlaylistEntry *pev)
 {
     int ret = m_pl.addEvent(pev);
     return ret;
-}
-
-
-/**
- * Callback function for a LiveShow EP manual trigger. Unfortunately it has to go here as the plugin can't access
- * the SQL database directly.
- */
-void Channel::manualHoldRelease (PlaylistEntry &event, Channel *pchannel)
-{
-    // Erase any remaining children of this event
-    std::vector<PlaylistEntry> children = pchannel->m_pl.getChildEvents(event.m_eventid);
-
-    for (PlaylistEntry thischild : children)
-    {
-        pchannel->m_pl.removeEvent(thischild.m_eventid);
-    }
-
-    // Perform the shunt
-    time_t starttime = event.m_trigger + static_cast<int>(event.m_duration / g_pbaseconfig->getFramerate());
-    int length = time(NULL) - starttime;
-    pchannel->m_pl.shunt(starttime, length);
-
 }

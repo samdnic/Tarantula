@@ -95,7 +95,6 @@ class EventProcessor_Live(EventProcessorBase):
         manualevent.type = datatypes.get_eventtype_fromname('manual')
         manualevent.description = event.description
         manualevent.duration = event.duration
-        manualevent.callback = "Channel::manualHoldRelease"
         
         if (event.duration > self._nownextmin.total_seconds()):
             # Generate CG overlay events

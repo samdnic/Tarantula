@@ -46,16 +46,12 @@ public:
 
     int createEvent (PlaylistEntry *ev);
 
-    void manualTrigger (int id);
-
     PlaylistDB m_pl;
     std::string m_channame;
     //! Crosspoint name for this channel
     std::string m_xpdevicename;
     //! Crosspoint port name for this channel
     std::string m_xpport;
-
-    static void manualHoldRelease (PlaylistEntry &event, Channel *pchannel);
 
 private:
     void runEvent (PlaylistEntry& pevent);
