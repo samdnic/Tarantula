@@ -153,7 +153,7 @@ public:
     void processEvent (int eventID);
     void setEventState (int eventID, playlist_status_t state);
     void removeEvent (int eventID);
-    int getActiveHold (time_t bytime);
+    int getActiveHold ();
     void shunt (time_t starttime, int shuntlength);
 
     std::vector<PlaylistEntry> getExecutingEvents ();

@@ -100,8 +100,7 @@ PlaylistDB::PlaylistDB () :
     m_getextras_query = prepare("SELECT key,value FROM extradata WHERE eventid = ?");
 
     m_gethold_query = prepare("SELECT id FROM events WHERE processed = " +
-    		std::to_string(playlist_status_t::EVENTSTATE_HOLD) + " AND type = ? "
-            "ORDER BY trigger DESC LIMIT 1");
+    		std::to_string(playlist_status_t::EVENTSTATE_HOLD) + " LIMIT 1");
 
     // Queries used by EventSource interface
     m_geteventlist_query = prepare("SELECT DISTINCT events.id, events.type, events.trigger, events.device, "
@@ -424,16 +423,13 @@ void PlaylistDB::removeEvent (int eventID)
 }
 
 /**
- * Return the event ID of the most-recently activated manual hold
+ * Return the event ID of the active manual hold
  *
- * @param bytime The time at which to search (usually now)
  * @return       EventID of hold event, or 0 for no hold
  */
-int PlaylistDB::getActiveHold(time_t bytime)
+int PlaylistDB::getActiveHold()
 {
     m_gethold_query->rmParams();
-    m_gethold_query->addParam(1, DBParam(bytime));
-    m_gethold_query->addParam(2, DBParam(EVENT_MANUAL));
     m_gethold_query->bindParams();
 
     sqlite3_stmt* stmt = m_gethold_query->getStmt();

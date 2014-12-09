@@ -66,6 +66,9 @@ void Channel::tick ()
     //Execute events on devices
     for (PlaylistEntry thisevent : events)
     {
+    	// Update the hold state (holds are cleared by webservice)
+    	m_hold_event = m_pl.getActiveHold();
+
     	// If the channel is not in hold, go ahead and run events
     	if (0 == m_hold_event)
     	{
