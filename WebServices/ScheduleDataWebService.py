@@ -51,7 +51,7 @@ class ScheduleDataWebService(object):
         
         dataarray = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger > start_ts,
                                                                          PlaylistEntry.trigger < end_ts,
-                                                                         PlaylistEntry.parent == None)).all()
+                                                                         PlaylistEntry.parent == 0)).all()
                                                                          
         return [self._get_public_dict(e) for e in dataarray]
     
@@ -81,7 +81,7 @@ class ScheduleDataWebService(object):
         try:
             currentevent = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger < timepoint,
                                                                          PlaylistEntry.trigger + PlaylistEntry.duration > timepoint,
-                                                                         PlaylistEntry.parent == None)).one()
+                                                                         PlaylistEntry.parent == 0)).one()
         except sqlalchemy.orm.exc.NoResultFound:
             return []
         
@@ -96,7 +96,7 @@ class ScheduleDataWebService(object):
         timepoint = misc.get_timestamp(datetime.datetime.now())
         
         dataarray = database.query(PlaylistEntry).filter(sqlalchemy.and_(PlaylistEntry.trigger > timepoint,
-                                                                         PlaylistEntry.parent == None)).order_by(PlaylistEntry.trigger).all()
+                                                                         PlaylistEntry.parent == 0)).order_by(PlaylistEntry.trigger).all()
                                                                          
         return [self._get_public_dict(e) for e in dataarray]
         

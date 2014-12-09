@@ -192,7 +192,7 @@ class PlaylistEntry(Base):
     devicetype = Column(Integer)
     action = Column(Integer)
     duration = Column(Integer)
-    parent = Column(Integer, ForeignKey(id))
+    parent = Column(Integer, ForeignKey(id), default=0)
     processed = Column(Integer, default=get_eventstate_fromname('ready'))
     lastupdate = Column(BigInteger)
     callback = Column(Text, default="")
