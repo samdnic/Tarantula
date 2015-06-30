@@ -25,7 +25,8 @@ if __name__ == '__main__':
     
     EventProcessorBase.setup_event_processors(configroot.find('ProcessorConfigFiles').text)
     
-    cherrypy.server.socket_port = int(configroot.find('Port').text)
+    cherrypy.server.socket_port = int(os.getenv('PORT', configroot.find('Port').text))
+    cherrypy.server.socket_host = os.getenv('IP', '0.0.0.0')
     
     # Configure the database
     SAEnginePlugin(cherrypy.engine, 'sqlite:///{0}'.format(configroot.find('Database').text)).subscribe()
