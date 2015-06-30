@@ -149,20 +149,28 @@ class EventDataWebService(object):
         # Find the ID number for this type
         try:
             newentry.devicetype = datatypes.get_devicetype_fromname(input_data['devicetype'])
-        except KeyError:
-            raise cherrypy.HTTPError(500, "Unable to locate a device type for {0}".format(input_data['devicetype']))
+        except (KeyError, AttributeError) as e:
+            device_name_list = '"' + '\", \"'.join([device['name'].lower() for device in DEVICEACTIONMAP]) + '"'
+            raise cherrypy.HTTPError(500, "Unable to locate a device type for {0}.  " \
+                "Valid options are {1}".format(input_data['devicetype'], device_name_list))
         
         try:
             newentry.action = datatypes.get_action_fromname(input_data['action'], newentry.devicetype)
-        except KeyError:
-            raise cherrypy.HTTPError(500, 'Unable to locate an action for "{0}"'.format(input_data['action']))
+        except (KeyError, AttributeError) as e:
+            action_name_list = '"' + '\", \"'.join([action['name'].lower() for action in DEVICEACTIONMAP[newentry.devicetype]['items']]) + '"'
+            raise cherrypy.HTTPError(500, 'Unable to locate an action for "{0}". ' \
+                "Valid action names are {1}".format(input_data['action'], action_name_list))
         
         # Validate the action parameters
         for parameter in DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters']:      
             typename = DEVICEACTIONMAP[newentry.devicetype]['items'][newentry.action]['parameters'][parameter]   
                
-            if parameter not in input_data['extradata'].keys() and typename != 'map':
-                raise cherrypy.HTTPError(500, 'Parameter "{0}" is required for action "{1}"'.format(parameter, input_data['action']))
+            try:
+                if parameter not in input_data['extradata'].keys() and typename != 'map':
+                    raise cherrypy.HTTPError(500, 'Parameter "{0}" is required for action "{1}"'.format(parameter, input_data['action']))
+            except KeyError:
+                raise cherrypy.HTTPError(500, 'Action {0} on device {1} requires ' \
+                    'parameters in extradata: [] section'.format(input_data['action'], DEVICEACTIONMAP[newentry.devicetype]['name']))
             
             # If parameter type is int, check it can be converted (other types require no check)
             if typename == 'int':
@@ -171,11 +179,16 @@ class EventDataWebService(object):
                 except ValueError:
                     raise cherrypy.HTTPError(500, 'Parameter "{0}" should be an int on action "{1}"'.format(parameter, input_data['action']))
         
-        for key in input_data['extradata'].keys():           
-            newdata = PlaylistData()
-            newdata.key = key
-            newdata.value = input_data['extradata'][key]
-            newentry.eventdata.append(newdata)
+        try:
+            for key in input_data['extradata'].keys():           
+                newdata = PlaylistData()
+                newdata.key = key
+                newdata.value = input_data['extradata'][key]
+                newentry.eventdata.append(newdata)
+        except KeyError:
+            # Apparently we didn't have one of them. Oh well. If we got here
+            # we didn't need it anyway
+            pass
         
         if set_id == True:
             newentry.id = input_data['eventid']
@@ -208,7 +221,11 @@ class EventDataWebService(object):
                 processor = EventProcessorBase.processorlist[event.device]
             except KeyError:
                 raise cherrypy.HTTPError(500, 'No processor was found with name "{0}". Did you definitely enable it?'.format(event.device))
-            event = processor.handleevent(event)
+                
+            try:
+                event = processor.handleevent(event)
+            except (ValueError, KeyError) as e:
+                raise cherrypy.HTTPError(500, 'Internal event processor error: "{0}"'.format(str(e)))
             
             # Recurse through children in case new processors added
             for child in event.children:
