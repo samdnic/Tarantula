@@ -3,7 +3,7 @@
     <PluginLoad>
         <Name>Syslog Logger</Name>
         <Type>Logger</Type>
-        <Library>Log_Syslog</Library>
+        <Library>libLog_Syslog</Library>
         <Instance>Syslog Logger</Instance>
         <Enabled>true</Enabled>
     </PluginLoad>

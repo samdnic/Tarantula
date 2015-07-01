@@ -3,7 +3,7 @@
     <PluginLoad>
 	    <Name>Caspar CG Plugin</Name>
 	    <Type>Device</Type>
-	    <Library>CGDevice_Caspar</Library>
+	    <Library>libCGDevice_Caspar</Library>
 	    <Instance>Main Video Server Graphics</Instance>
 	    <Enabled>false</Enabled>
 	</PluginLoad>

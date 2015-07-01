@@ -3,7 +3,7 @@
     <PluginLoad>
 	    <Name>Caspar Media</Name>
 	    <Type>Device</Type>
-	    <Library>VideoDevice_Caspar</Library>
+	    <Library>libVideoDevice_Caspar</Library>
 	    <Instance>Main Video Server</Instance>
 	    <Enabled>false</Enabled>
 	</PluginLoad>

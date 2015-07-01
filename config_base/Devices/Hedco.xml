@@ -3,7 +3,7 @@
     <PluginLoad>
         <Name>Hedco</Name>
         <Type>Device</Type>
-        <Library>CrosspointDevice_Hedco</Library>
+        <Library>libCrosspointDevice_Hedco</Library>
         <Instance>Netmux</Instance>
         <Enabled>false</Enabled>
     </PluginLoad>
