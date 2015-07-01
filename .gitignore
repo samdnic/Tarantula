@@ -2,6 +2,7 @@
 config
 
 # Ignore built files
+build/
 *.o
 *.a
 *.so
