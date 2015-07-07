@@ -3,6 +3,8 @@ cmake_minimum_required (VERSION 2.8)
 project(Tarantula)
 
 # Go find some packages
+find_package( Boost REQUIRED COMPONENTS system chrono)
+include_directories( ${Boost_INCLUDE_DIRS} )
 
 # Make binaries turn up somewhere useful
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${Tarantula_SOURCE_DIR}/../bin)
