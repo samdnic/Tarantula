@@ -17,15 +17,15 @@
         <ItemOffset>3750</ItemOffset>
         <WeightPoints>
             <WeightPoint>
-                <Offset>3600</Offset>
+                <Time units="seconds">3600</Time>
                 <Weight>1000</Weight>
             </WeightPoint>
             <WeightPoint>
-                <Offset>86400</Offset>
+                <Time units="seconds">86400</Time>
                 <Weight>100</Weight>
             </WeightPoint>
             <WeightPoint>
-                <Offset>400000</Offset>
+                <Time units="seconds">400000</Time>
                 <Weight>10</Weight>
             </WeightPoint>
         </WeightPoints>
@@ -33,12 +33,14 @@
             <StructureItem>
                 <Type>show</Type>
                 <Device>Show</Device>
+                <DeviceType>Processor</DeviceType>
+                <Action>Process</Action>
             </StructureItem>
         </StructureData>
         <EnableFill>true</EnableFill>
         <SingleShotMode>true</SingleShotMode>
         <ContinuityFill> <!--  Describes a CG event to pad out unfilled time -->
-            <MinimumTime units="frames">0</MinimumTime> <!--  Minimum length of CG event -->
+            <MinimumTime units="seconds">0</MinimumTime> <!--  Minimum length of CG event -->
             <Device>Main Video Server Graphics</Device>
             <GraphicName>clock</GraphicName>
             <PreProcessor></PreProcessor>

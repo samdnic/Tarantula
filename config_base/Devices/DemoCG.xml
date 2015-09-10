@@ -3,7 +3,7 @@
     <PluginLoad>
         <Name>Demo CG Device</Name>
         <Type>Device</Type>
-        <Library>CGDevice_Demo</Library>
+        <Library>libCGDevice_Demo</Library>
         <Instance>Demo CG Device 1</Instance>
         <Enabled>true</Enabled>
     </PluginLoad>

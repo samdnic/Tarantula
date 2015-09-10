@@ -3,7 +3,7 @@
     <PluginLoad>
 	    <Name>PiVT Video Server</Name>
 	    <Type>Device</Type>
-	    <Library>VideoDevice_PiVT</Library>
+	    <Library>libVideoDevice_PiVT</Library>
 	    <Instance>PiVT Video Server</Instance>
 	    <Enabled>false</Enabled>
 	</PluginLoad>
