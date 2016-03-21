@@ -21,8 +21,7 @@ if __name__ == '__main__':
     configroot = tree.getroot()
     
     mount_location = os.path.join(configroot.find('MountStem').text, MOUNT_LOCATION_SUFFIX)
-    
-    
+
     EventProcessorBase.setup_event_processors(configroot.find('ProcessorConfigFiles').text)
     
     cherrypy.server.socket_port = int(os.getenv('PORT', configroot.find('Port').text))

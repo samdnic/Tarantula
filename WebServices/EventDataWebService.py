@@ -231,7 +231,7 @@ class EventDataWebService(object):
             for child in event.children:
                 child = self._processor_recurse(child)
                 
-            return event
+        return event
     
 if __name__ == '__main__':
     

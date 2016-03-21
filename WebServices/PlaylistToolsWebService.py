@@ -50,7 +50,9 @@ class PlaylistToolsWebService(object):
         
         
         shunttime = datetime.datetime.isoformat(plannedend)
-        self.shunt(shunttime, plannedend, difference.total_seconds())
+        self.shunt(shunttime, plannedend)
+
+        database.commit()
         
         cherrypy.response.status = 200
         return "Success!"
@@ -61,7 +63,11 @@ class PlaylistToolsWebService(object):
         """Push/pull the playlist by a specified offset"""
         
         timepoint = misc.get_timestamp(misc.parse_time(timepoint))
-        originalend = misc.get_timestamp(misc.parse_time(originalend))
+
+        if not isinstance(originalend, datetime.datetime):
+            originalend = misc.parse_time(originalend)
+
+        originalend = misc.get_timestamp(originalend)
         duration = timepoint - originalend
         
         # Alex Williams devised this clever little jewel

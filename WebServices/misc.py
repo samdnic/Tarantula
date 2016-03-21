@@ -2,15 +2,18 @@ from dateutil.parser import parse
 import datetime
 from calendar import timegm
 
+
 def parse_time(s):
     try:
         ret = parse(s)
-    except ValueError:
-        ret = datetime.utcfromtimestamp(s)
+    except (ValueError, AttributeError):
+        ret = datetime.datetime.utcfromtimestamp(s)
     return ret
+
 
 def get_timestamp(dt):
     return int(timegm(dt.timetuple()))
+
 
 def parse_duration(data, units='seconds'):
     if units == 'seconds':
@@ -25,4 +28,4 @@ def parse_duration(data, units='seconds'):
         return datetime.timedelta(weeks=int(data))
     else:
         raise ValueError('Unknown unit specifier "{0}"'.format(units))
-    
+
