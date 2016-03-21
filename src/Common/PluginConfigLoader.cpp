@@ -198,7 +198,7 @@ void loadAllPlugins (std::string path, std::string type)
     }
     else
     {
-        g_logger.warn("MouseCatcher Event Processor Loader",
+        g_logger.warn("Plugin Loader",
                 "Cannot load directory " + path);
     }
 }
